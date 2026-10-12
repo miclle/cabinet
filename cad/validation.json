@@ -1,0 +1,75 @@
+{
+  "checks": {
+    "valid_solids": true,
+    "cabinet_size_940_460_830": true,
+    "source_player_65_parts": true,
+    "closed_player_width_450": true,
+    "closed_player_height_210_7": true,
+    "closed_player_cabinet_no_penetration": true,
+    "cabinet_parts_no_penetration": true,
+    "record_placeholders_no_cabinet_penetration": true,
+    "back_panel_full_coverage": true,
+    "door_0_110_sampled_no_cabinet_penetration": true,
+    "drawer_0_300_sampled_no_cabinet_penetration": true,
+    "cover_0_70_sampled_no_cabinet_penetration": true,
+    "cover_0_70_sampled_wall_clear": true,
+    "open_player_below_1300": true,
+    "left_and_right_margin_25": true,
+    "closed_step_valid": true
+  },
+  "passed": true,
+  "invalid": [],
+  "source_sha256": "08db7b527fcfc7747c2f7a8d27714b8630ba7e80b7e7a8a5b4e3a5e7ee5ed833",
+  "closed_player_bounds_mm": {
+    "min": [
+      445.0,
+      25.0,
+      780.0
+    ],
+    "max": [
+      895.0,
+      388.7786530812917,
+      990.7
+    ],
+    "size": [
+      450.0,
+      363.7786530812917,
+      210.70000000000005
+    ]
+  },
+  "open_player_bounds_mm": {
+    "min": [
+      445.0,
+      25.0,
+      780.0
+    ],
+    "max": [
+      895.0,
+      439.3473396612978,
+      1282.3305788778034
+    ],
+    "size": [
+      450.0,
+      414.3473396612978,
+      502.3305788778034
+    ]
+  },
+  "cover_sweep_step_degrees": 1,
+  "cover_sweep_angles": 71,
+  "cover_sweep_min_wall_distance_mm": 100.65266033870228,
+  "cover_sweep_min_cabinet_distance_mm": 104.284466724436,
+  "cover_sweep_max_height_mm": 1282.3305788778034,
+  "closed_player_cabinet_collisions": [],
+  "cover_sweep_collisions": [],
+  "cabinet_part_collisions": [],
+  "record_placeholder_collisions": [],
+  "door_sweep_collisions": [],
+  "drawer_sweep_collisions": [],
+  "limits": [
+    "Discrete geometry checks, not continuous motion or physical fit.",
+    "Hardware, fasteners, wood joints, load and tip stability unverified.",
+    "Record sleeves assume 320\u00d7320\u00d74 mm; quantities are display samples.",
+    "Plug/cable and acoustic clearance require physical confirmation."
+  ],
+  "model_sha256": "be4b3481569a564e3a2fb6341c027da1efb2fbed0a9109a6c23ce4340d27f39e"
+}
