@@ -1,0 +1,40 @@
+﻿part_id,cad_object,group,description,location,dimension_axes,length_mm,width_mm,thickness_mm,quantity,closed_x_min_mm,closed_y_min_mm,closed_z_min_mm,status,notes
+B01-L,SideLeft,Cabinet,左侧落地板 · 前810后830 · R20,柜体左侧落地板,Z/Y/X,830.0,460.0,20.0,1,0.0,-0.0,0.0,CAD envelope; not released for cutting,前端名义高810、后端830；前上角R20与斜上沿相切；需轮廓图与接头余量
+B01-R,SideRight,Cabinet,右侧落地板 · 前810后830 · R20,柜体右侧落地板,Z/Y/X,830.0,460.0,20.0,1,920.0,-0.0,0.0,CAD envelope; not released for cutting,前端名义高810、后端830；前上角R20与斜上沿相切；需轮廓图与接头余量
+B02,Bottom,Cabinet,底板 · 下表面距地 100,底板，下表面高100,X/Y/Z,900.0,460.0,20.0,1,20.0,0.0,100.0,CAD envelope; not released for cutting,两侧板之间；入槽和榫长未计
+B03,Middle,Cabinet,中隔板 · 后端抵背板内侧,左右分区中隔板，底高120,Z/Y/X,660.0,440.0,20.0,1,400.0,0.0,120.0,CAD envelope; not released for cutting,后端抵背板内表面；榫槽未计
+B04,PlayerTable,Cabinet,唱片机台面 · 高 780,右上唱片机台面，承托面高780,X/Y/Z,500.0,440.0,20.0,1,420.0,0.0,760.0,CAD envelope; not released for cutting,端部连接、孔位未计
+B05,BinFloor,Cabinet,左上唱片槽底板,左上唱片槽底板，上表面高560,X/Y/Z,380.0,440.0,20.0,1,20.0,0.0,540.0,CAD envelope; not released for cutting,板深440；加前挡板后槽内净深420；榫槽未计
+B06,BinFront,Cabinet,唱片槽前挡板 · 高 220,左上唱片槽前挡板，底高560,X/Z/Y,380.0,220.0,20.0,1,20.0,0.0,560.0,CAD envelope; not released for cutting,顶高780；端部连接未计
+B07,BackPanel,Cabinet,整幅封闭背板 · 顶高810 · 900×690×20,整幅封闭背板，底高120、顶高810,X/Z/Y,900.0,690.0,20.0,1,20.0,440.0,120.0,CAD envelope; not released for cutting,低于侧板后端20；浮动缝和背板接头待定
+B08,RightShelf,Cabinet,右侧层板 · 上格净高 250,右侧层板，上表面高510,X/Y/Z,500.0,400.0,20.0,1,420.0,30.0,490.0,CAD envelope; not released for cutting,前沿Y30、后沿Y430；后方余量10；接头待定
+B09,RecordDivider,Cabinet,下格可拆竖隔板 · 两格净宽 240,右下可拆竖隔板，底高120,Z/Y/X,370.0,400.0,20.0,1,660.0,30.0,120.0,CAD envelope; not released for cutting,高370为净空紧配；装拆间隙和定位件未加入
+C01,DrawerFront,Drawer,抽屉面板 · 四周 3 mm 初值,左下抽屉外面板,X/Z/Y,374.0,234.0,20.0,1,23.0,0.0,123.0,CAD envelope; not released for cutting,实际374×234；名义面口380×240，四周各3间隙
+C02,DrawerFloor,Drawer,抽屉底板 · 10 mm,抽屉底板，上表面高150,X/Y/Z,354.0,384.0,10.0,1,33.0,20.0,140.0,CAD envelope; not released for cutting,当前在四壁下方，未入槽；改入槽需重算
+C03-L,DrawerLeft,Drawer,抽屉左侧 · 12 mm,抽屉左箱侧,Y/Z/X,384.0,190.0,12.0,1,33.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384；滑轨孔和箱角连接未计
+C03-R,DrawerRight,Drawer,抽屉右侧 · 12 mm,抽屉右箱侧,Y/Z/X,384.0,190.0,12.0,1,375.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384；滑轨孔和箱角连接未计
+C04-F,DrawerInnerFront,Drawer,抽屉内前板,抽屉箱内前板,X/Z/Y,330.0,190.0,12.0,1,45.0,20.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间；箱角连接未计
+C04-R,DrawerRear,Drawer,抽屉后板,抽屉后板,X/Z/Y,330.0,190.0,12.0,1,45.0,392.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间；箱角连接未计
+D01-L,DoorLeft,Door,格栅门左边框,格栅门左竖框,Z/X/Y,586.0,24.0,28.0,1,423.0,0.0,147.0,CAD envelope; not released for cutting,586为上下框间净长；两端榫长未计；框宽24不直接适配Ø35杯孔
+D01-R,DoorRight,Door,格栅门右边框,格栅门右竖框,Z/X/Y,586.0,24.0,28.0,1,893.0,0.0,147.0,CAD envelope; not released for cutting,586为上下框间净长；两端榫长未计；框宽24不直接适配Ø35杯孔
+D02-T,DoorTop,Door,格栅门上框,格栅门上横框,X/Z/Y,494.0,24.0,28.0,1,423.0,0.0,733.0,CAD envelope; not released for cutting,当前通长494；角部连接及19个格栅榫眼未计
+D02-B,DoorBottom,Door,格栅门下框,格栅门下横框,X/Z/Y,494.0,24.0,28.0,1,423.0,0.0,123.0,CAD envelope; not released for cutting,当前通长494；角部连接及19个格栅榫眼未计
+D03-01,DoorSlat01,Door,格栅木条 01 · 14×24,格栅门第1根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,447.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-02,DoorSlat02,Door,格栅木条 02 · 14×24,格栅门第2根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,471.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-03,DoorSlat03,Door,格栅木条 03 · 14×24,格栅门第3根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,495.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-04,DoorSlat04,Door,格栅木条 04 · 14×24,格栅门第4根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,519.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-05,DoorSlat05,Door,格栅木条 05 · 14×24,格栅门第5根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,543.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-06,DoorSlat06,Door,格栅木条 06 · 14×24,格栅门第6根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,567.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-07,DoorSlat07,Door,格栅木条 07 · 14×24,格栅门第7根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,591.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-08,DoorSlat08,Door,格栅木条 08 · 14×24,格栅门第8根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,615.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-09,DoorSlat09,Door,格栅木条 09 · 14×24,格栅门第9根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,639.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-10,DoorSlat10,Door,格栅木条 10 · 14×24,格栅门第10根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,663.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-11,DoorSlat11,Door,格栅木条 11 · 14×24,格栅门第11根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,687.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-12,DoorSlat12,Door,格栅木条 12 · 14×24,格栅门第12根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,711.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-13,DoorSlat13,Door,格栅木条 13 · 14×24,格栅门第13根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,735.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-14,DoorSlat14,Door,格栅木条 14 · 14×24,格栅门第14根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,759.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-15,DoorSlat15,Door,格栅木条 15 · 14×24,格栅门第15根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,783.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-16,DoorSlat16,Door,格栅木条 16 · 14×24,格栅门第16根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,807.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-17,DoorSlat17,Door,格栅木条 17 · 14×24,格栅门第17根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,831.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-18,DoorSlat18,Door,格栅木条 18 · 14×24,格栅门第18根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,855.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
+D03-19,DoorSlat19,Door,格栅木条 19 · 14×24,格栅门第19根竖条（从柜子正面左侧数）,Z/X/Y,586.0,14.0,24.0,1,879.0,0.0,147.0,CAD envelope; not released for cutting,D形截面，前半圆R7、后接矩形深17，总深24；586净长未加端榫；间距10
