@@ -48,15 +48,23 @@ def add_part(doc, group, name, label, shape, color, role=None):
 
 def side_shape(x, parameters):
     depth, height = parameters['depth'], parameters['height']
+    front = parameters['side_front_height']
+    slope = (height-front) / depth
     radius = 20
-    # Quarter-circle at the front upper corner, extruded across board thickness.
+    # R20 stays tangent to both the vertical front and the rising top edge.
+    normal_length = math.sqrt(1+slope*slope)
+    center_y = radius
+    center_z = front+slope*radius-radius*normal_length
+    tangent_y = center_y-radius*slope/normal_length
+    tangent_z = center_z+radius/normal_length
+    mid_angle = (math.atan2(1, -slope)+math.pi)/2
     points = [V(x, 0, 0), V(x, depth, 0), V(x, depth, height),
-              V(x, radius, height)]
+              V(x, tangent_y, tangent_z)]
     edges = [Part.makeLine(a, b) for a, b in zip(points, points[1:])]
     edges.append(Part.Arc(points[-1],
-        V(x, radius-radius/math.sqrt(2), height-radius+radius/math.sqrt(2)),
-        V(x, 0, height-radius)).toShape())
-    edges.append(Part.makeLine(V(x, 0, height-radius), points[0]))
+        V(x, center_y+radius*math.cos(mid_angle), center_z+radius*math.sin(mid_angle)),
+        V(x, 0, center_z)).toShape())
+    edges.append(Part.makeLine(V(x, 0, center_z), points[0]))
     return Part.Face(Part.Wire(edges)).extrude(V(parameters['board'], 0, 0))
 
 
@@ -72,16 +80,17 @@ def build_cabinet(doc, parameters):
         return add_part(doc, groups[group], name, label,
             Part.makeBox(width, depth, height, V(x, y, z)), WOOD, role)
 
-    add_part(doc, groups['Cabinet'], 'SideLeft', '左侧落地板 · R20',
+    add_part(doc, groups['Cabinet'], 'SideLeft', '左侧落地板 · 前810后830 · R20',
              side_shape(0, parameters), WOOD)
-    add_part(doc, groups['Cabinet'], 'SideRight', '右侧落地板 · R20',
+    add_part(doc, groups['Cabinet'], 'SideRight', '右侧落地板 · 前810后830 · R20',
              side_shape(920, parameters), WOOD)
     box('Bottom', '底板 · 下表面距地 100', 20, 0, 100, 900, 460, 20)
     box('Middle', '中隔板 · 后端抵背板内侧', 400, 0, 120, 20, 440, 660)
     box('PlayerTable', '唱片机台面 · 高 780', 420, 0, 760, 500, 440, 20)
     box('BinFloor', '左上唱片槽底板', 20, 0, 540, 380, 440, 20)
     box('BinFront', '唱片槽前挡板 · 高 220', 20, 0, 560, 380, 20, 220)
-    box('BackPanel', '整幅封闭背板 · 900×710×20', 20, 440, 120, 900, 20, 710)
+    box('BackPanel', '整幅封闭背板 · 顶高810 · 900×690×20',
+        20, 440, 120, 900, 20, parameters['back_top_height']-120)
     box('RightShelf', '右侧层板 · 上格净高 250', 420, 30, 490, 500, 400, 20)
     box('RecordDivider', '下格可拆竖隔板 · 两格净宽 240',
         660, 30, 120, 20, 400, 370)
@@ -248,6 +257,13 @@ def validate(doc, groups, parameters, pose):
                 hits.append([angle, volume])
     pose.set_pose(doc, parameters['open_angle'])
     open_bounds = bounds(groups['Player'].Group)
+    side_tops = []
+    for obj, x in ((doc.SideLeft, 10), (doc.SideRight, 930)):
+        side_tops.append([obj.Shape.common(Part.makeLine(
+            V(x, y, 700), V(x, y, 850))).BoundBox.ZMax for y in (20, 230, 460)])
+    expected_tops = [parameters['side_front_height']
+        +(parameters['height']-parameters['side_front_height'])*y/parameters['depth']
+        for y in (20, 230, 460)]
     checks = {
         'valid_solids': not invalid,
         'cabinet_size_940_460_830': all(abs(a-b) < 1e-6 for a,b in zip(
@@ -258,7 +274,11 @@ def validate(doc, groups, parameters, pose):
         'closed_player_cabinet_no_penetration': not collisions,
         'cabinet_parts_no_penetration': not internal_hits,
         'record_placeholders_no_cabinet_penetration': not record_hits,
-        'back_panel_full_coverage': Part.makeBox(900, 20, 710, V(20, 440, 120)).cut(
+        'side_tops_rise_20_to_rear': all(abs(actual-expected) < 1e-6
+            for row in side_tops for actual, expected in zip(row, expected_tops)),
+        'back_top_20_below_rear_side_tops': all(
+            abs(row[-1]-doc.BackPanel.Shape.BoundBox.ZMax-20) < 1e-6 for row in side_tops),
+        'back_panel_full_coverage': Part.makeBox(900, 20, 690, V(20, 440, 120)).cut(
             doc.BackPanel.Shape).Volume < 0.001,
         'door_0_110_sampled_no_cabinet_penetration': not door_hits,
         'drawer_0_300_sampled_no_cabinet_penetration': not drawer_hits,
@@ -270,6 +290,8 @@ def validate(doc, groups, parameters, pose):
     }
     return {'checks': checks, 'passed': all(checks.values()), 'invalid': invalid,
         'source_sha256': doc.SceneState.SourceSHA256,
+        'side_top_sample_y_mm': [20, 230, 460], 'side_top_sample_z_mm': side_tops,
+        'back_top_height_mm': doc.BackPanel.Shape.BoundBox.ZMax,
         'closed_player_bounds_mm': closed_bounds, 'open_player_bounds_mm': open_bounds,
         'cover_sweep_step_degrees': 1, 'cover_sweep_angles': 71,
         'cover_sweep_min_wall_distance_mm': min_wall,
@@ -303,6 +325,7 @@ def render(doc, groups, pose):
     pose.set_pose(doc, 0)
     save('closed.png', iso)
     save('front.png', App.Rotation(V(1, 0, 0), 90))
+    save('side-profile.png', App.Rotation(V(0, 1, 0), V(0, 0, 1), V(1, 0, 0), 'ZXY'))
     save('rear.png', App.Rotation(V(-1, 0, 0), V(0, 0, 1), V(0, 1, 0), 'ZXY'))
     pose.set_pose(doc, 70)
     save('open.png', iso)
@@ -329,6 +352,7 @@ def deliver():
             raise RuntimeError('Save manual changes separately and close cabinet.FCStd before rebuilding')
     parameters = json.loads((ROOT / 'cad/parameters.json').read_text())
     baseline = {'width': 940, 'depth': 460, 'height': 830, 'board': 20,
+        'side_front_height': 810, 'back_top_height': 810,
         'back_style': 'closed',
         'left_clear_width': 380, 'right_clear_width': 500, 'tabletop_height': 780,
         'bottom_clearance': 100, 'bin_floor_top': 560, 'right_shelf_top': 510,
