@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": {
+    "validation_passed": true,
+    "validation_matches_model": true,
+    "saved_camera": true,
+    "all_saved_shapes_valid": true,
+    "saved_open_pose_70": true,
+    "source_hash_persisted": true,
+    "65_imported_player_parts": true,
+    "closed_back_size_and_position": true,
+    "all_physical_parts_visible": true,
+    "guides_hidden": true,
+    "closed_height_after_reopen": true,
+    "pose_round_trip": true
+  }
+}

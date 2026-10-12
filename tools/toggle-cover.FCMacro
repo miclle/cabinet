@@ -1,0 +1,6 @@
+from pathlib import Path
+
+path = Path(__file__).resolve().with_name('scene_pose.py')
+scope = {'__file__': str(path), '__name__': 'cabinet_scene_pose'}
+exec(compile(path.read_bytes(), str(path), 'exec'), scope)
+scope['toggle_active']()

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.DS_Store
+*.tmp
+*.swp
+*.swo
+*.FCStd1
+*.FCStd.*
+*.FCBak
+cad/build.done
+cad/build-error.log
+cad/history/
