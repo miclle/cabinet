@@ -315,6 +315,7 @@ def render(doc, groups, pose):
     view.setAnimationEnabled(False)
     view.setCameraType('Orthographic')
     iso = App.Rotation(V(3, 1.4, 0), V(0, 0, 1), V(1.4, -3, 1.2), 'ZXY')
+    rear_upper = App.Rotation(V(-3, 1.6, 0), V(0, 0, 1), V(1.6, 3, 1.8), 'ZXY')
 
     def save(name, orientation):
         view.setCameraOrientation(orientation.Q)
@@ -327,8 +328,10 @@ def render(doc, groups, pose):
     save('front.png', App.Rotation(V(1, 0, 0), 90))
     save('side-profile.png', App.Rotation(V(0, 1, 0), V(0, 0, 1), V(1, 0, 0), 'ZXY'))
     save('rear.png', App.Rotation(V(-1, 0, 0), V(0, 0, 1), V(0, 1, 0), 'ZXY'))
+    save('rear-upper-closed.png', rear_upper)
     pose.set_pose(doc, 70)
     save('open.png', iso)
+    save('rear-upper-open.png', rear_upper)
     doc.RoomWall.Visibility = True
     save('clearance-right.png', App.Rotation(V(0, 1, 0), V(0, 0, 1), V(1, 0, 0), 'ZXY'))
     doc.RoomWall.Visibility = False

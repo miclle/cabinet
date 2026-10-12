@@ -19,6 +19,12 @@
 |---|---|
 | ![闭盖整体](previews/closed.png) | ![开盖整体](previews/open.png) |
 
+| 后侧斜上方 · 闭盖 | 后侧斜上方 · 开盖 70° |
+|---|---|
+| ![后侧斜上方闭盖](previews/rear-upper-closed.png) | ![后侧斜上方开盖](previews/rear-upper-open.png) |
+
+这组视图采用相同的后侧斜上方角度，分别适配完整模型范围，便于观察整体比例、侧板后端与背板的 20 mm 高差，以及开盖后与柜体的间距。柜门与抽屉均关闭。
+
 [正视](previews/front.png) · [侧板轮廓](previews/side-profile.png) · [封闭背面](previews/rear.png) · [格栅门开启与抽屉拉出](previews/storage-open.png) · [当前内部布局](previews/storage-inspection.png) · [开盖与墙面右视](previews/clearance-right.png)
 
 ## 当前布局
@@ -51,6 +57,7 @@
 
 - 闭盖时，唱片机总包络为 **450 × 363.779 × 210.7 mm**，最低承托点离地 780，最高点离地 **990.7 mm**。
 - 从 0° 至 70° 每 1° 检查，共 71 个姿态；盖壳、活动合页、补偿垫片和压板一起运动。没有与柜体发生穿透。
+- 开盖 70° 时，活动总成（含合页）与背板、右侧板（唱片机侧）、左侧板的最近直线距离分别约为 **124.1、115.1、450.4 mm**；这些是该姿态下的三维最短距离，不是水平留缝或全程最小间距。
 - 当前开盖最高点离地 **1282.33 mm**；保留至 1300 mm 的上方空间时，名义余量约 17.67 mm。
 - 柜后留 80 mm 时，整个采样范围内盖子活动总成距墙最近 **100.65 mm**。墙面在模型中保留为可显示参考体。
 - 闭盖唱片机与柜体、柜体各零件之间、唱片占位与柜体之间均无体积穿透。
@@ -64,7 +71,7 @@
 
 使用 FreeCAD 1.1.1 的图形界面，在宏窗口执行 [tools/build.FCMacro](tools/build.FCMacro)。生成前先关闭已打开的 `cad/cabinet.FCStd`，手工修改先另存；生成器会拒绝覆盖正在打开的目标文件。
 
-默认从相邻的 `../vinyl-record-player/cad/record-player.FCStd` 读取唱片机，跨环境可在启动 FreeCAD 前设置 `RECORD_PLAYER_SOURCE` 指向该文件。只读取临时副本，导入后会核对原文件哈希。生成器一次交付主模型、闭盖 STEP、8 张视口预览和几何报告；默认保存开盖 70°。不支持无 GUI 交付，以保留颜色、透明度与可见性。
+默认从相邻的 `../vinyl-record-player/cad/record-player.FCStd` 读取唱片机，跨环境可在启动 FreeCAD 前设置 `RECORD_PLAYER_SOURCE` 指向该文件。只读取临时副本，导入后会核对原文件哈希。生成器一次交付主模型、闭盖 STEP、10 张视口预览（含后侧斜上方的闭盖／开盖视图）和几何报告；默认保存开盖 70°。不支持无 GUI 交付，以保留颜色、透明度与可见性。
 
 保存文件回读可使用 FreeCAD 自带 Python；将 `FREECAD_RESOURCES` 设为本机运行环境的 Resources 目录后执行：
 
