@@ -9,6 +9,8 @@
     "source_hash_persisted": true,
     "65_imported_player_parts": true,
     "closed_back_size_and_position": true,
+    "saved_side_tops_rise_to_rear": true,
+    "saved_back_top_below_side_tops": true,
     "all_physical_parts_visible": true,
     "guides_hidden": true,
     "closed_height_after_reopen": true,

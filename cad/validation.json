@@ -8,6 +8,8 @@
     "closed_player_cabinet_no_penetration": true,
     "cabinet_parts_no_penetration": true,
     "record_placeholders_no_cabinet_penetration": true,
+    "side_tops_rise_20_to_rear": true,
+    "back_top_20_below_rear_side_tops": true,
     "back_panel_full_coverage": true,
     "door_0_110_sampled_no_cabinet_penetration": true,
     "drawer_0_300_sampled_no_cabinet_penetration": true,
@@ -20,6 +22,24 @@
   "passed": true,
   "invalid": [],
   "source_sha256": "08db7b527fcfc7747c2f7a8d27714b8630ba7e80b7e7a8a5b4e3a5e7ee5ed833",
+  "side_top_sample_y_mm": [
+    20,
+    230,
+    460
+  ],
+  "side_top_sample_z_mm": [
+    [
+      810.8695652173913,
+      820.0,
+      830.0
+    ],
+    [
+      810.8695652173913,
+      820.0,
+      830.0
+    ]
+  ],
+  "back_top_height_mm": 810.0,
   "closed_player_bounds_mm": {
     "min": [
       445.0,
@@ -57,7 +77,7 @@
   "cover_sweep_step_degrees": 1,
   "cover_sweep_angles": 71,
   "cover_sweep_min_wall_distance_mm": 100.65266033870228,
-  "cover_sweep_min_cabinet_distance_mm": 104.284466724436,
+  "cover_sweep_min_cabinet_distance_mm": 107.71507848057058,
   "cover_sweep_max_height_mm": 1282.3305788778034,
   "closed_player_cabinet_collisions": [],
   "cover_sweep_collisions": [],
@@ -71,5 +91,5 @@
     "Record sleeves assume 320\u00d7320\u00d74 mm; quantities are display samples.",
     "Plug/cable and acoustic clearance require physical confirmation."
   ],
-  "model_sha256": "be4b3481569a564e3a2fb6341c027da1efb2fbed0a9109a6c23ce4340d27f39e"
+  "model_sha256": "2eb6c5f11597ef2d800d9cd37024c3f0d6f6e35e04d00564a40797aa281d50d7"
 }

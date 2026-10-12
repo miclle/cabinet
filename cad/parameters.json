@@ -3,6 +3,8 @@
   "width": 940,
   "depth": 460,
   "height": 830,
+  "side_front_height": 810,
+  "back_top_height": 810,
   "board": 20,
   "back_style": "closed",
   "left_clear_width": 380,

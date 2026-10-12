@@ -42,7 +42,16 @@ def verify():
             back = doc.BackPanel.Shape.BoundBox
             checks['closed_back_size_and_position'] = all(abs(a-b) < 1e-6 for a,b in zip(
                 (back.XMin, back.YMin, back.ZMin, back.XLength, back.YLength, back.ZLength),
-                (20, 440, 120, 900, 20, 710)))
+                (20, 440, 120, 900, 20, 690)))
+            side_tops = []
+            for obj, x in ((doc.SideLeft, 10), (doc.SideRight, 930)):
+                side_tops.append([obj.Shape.common(Part.makeLine(
+                    App.Vector(x, y, 700), App.Vector(x, y, 850))).BoundBox.ZMax
+                    for y in (20, 230, 460)])
+            checks['saved_side_tops_rise_to_rear'] = all(abs(actual-(810+20*y/460)) < 1e-6
+                for row in side_tops for actual, y in zip(row, (20, 230, 460)))
+            checks['saved_back_top_below_side_tops'] = all(
+                abs(row[-1]-back.ZMax-20) < 1e-6 for row in side_tops)
             checks['all_physical_parts_visible'] = all(
                 providers[obj.Name].find("./Properties/Property[@name='Visibility']/Bool").get('value') == 'true'
                 for obj in parts if obj.Name not in ('RoomWall', 'RoomFloor'))
