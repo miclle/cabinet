@@ -8,9 +8,17 @@
     "closed_player_cabinet_no_penetration": true,
     "cabinet_parts_no_penetration": true,
     "record_placeholders_no_cabinet_penetration": true,
-    "side_tops_rise_20_to_rear": true,
-    "back_top_20_below_rear_side_tops": true,
+    "side_tops_rise_and_round_to_rear": true,
+    "back_top_20_below_side_highest_point": true,
+    "four_foot_pads_grounded_and_support_sides": true,
     "back_panel_full_coverage": true,
+    "back_panel_recess_10": true,
+    "adjoining_boards_end_at_back": true,
+    "routing_two_envelopes_three_clips": true,
+    "routing_static_no_penetration": true,
+    "plug_envelope_touches_inlet": true,
+    "clips_touch_back_and_clear_cable": true,
+    "cover_0_70_sampled_routing_no_penetration": true,
     "door_0_110_sampled_no_cabinet_penetration": true,
     "drawer_0_300_sampled_no_cabinet_penetration": true,
     "cover_0_70_sampled_no_cabinet_penetration": true,
@@ -25,59 +33,190 @@
   "side_top_sample_y_mm": [
     20,
     230,
+    440,
+    450,
     460
   ],
   "side_top_sample_z_mm": [
     [
-      810.8695652173913,
-      820.0,
-      830.0
+      810.8884912509909,
+      820.2268450082967,
+      829.5651987656024,
+      830.0000000000102,
+      820.0
     ],
     [
-      810.8695652173913,
-      820.0,
-      830.0
+      810.8884912509909,
+      820.2268450082967,
+      829.5651987656024,
+      830.0000000000102,
+      820.0
     ]
   ],
+  "foot_pad_bounds_mm": [
+    {
+      "min": [
+        1.0,
+        16.0,
+        0.0
+      ],
+      "max": [
+        19.0,
+        34.0,
+        5.0
+      ],
+      "size": [
+        18.0,
+        18.0,
+        5.0
+      ]
+    },
+    {
+      "min": [
+        1.0,
+        426.0,
+        0.0
+      ],
+      "max": [
+        19.0,
+        444.0,
+        5.0
+      ],
+      "size": [
+        18.0,
+        18.0,
+        5.0
+      ]
+    },
+    {
+      "min": [
+        921.0,
+        16.0,
+        0.0
+      ],
+      "max": [
+        939.0,
+        34.0,
+        5.0
+      ],
+      "size": [
+        18.0,
+        18.0,
+        5.0
+      ]
+    },
+    {
+      "min": [
+        921.0,
+        426.0,
+        0.0
+      ],
+      "max": [
+        939.0,
+        444.0,
+        5.0
+      ],
+      "size": [
+        18.0,
+        18.0,
+        5.0
+      ]
+    }
+  ],
   "back_top_height_mm": 810.0,
+  "back_recess_mm": 10.0,
+  "back_panel_bounds_mm": {
+    "min": [
+      20.0,
+      430.0,
+      120.0
+    ],
+    "max": [
+      920.0,
+      450.0,
+      810.0
+    ],
+    "size": [
+      900.0,
+      20.0,
+      690.0
+    ]
+  },
+  "routing_bounds_mm": {
+    "min": [
+      504.0,
+      377.48,
+      100.0
+    ],
+    "max": [
+      526.0,
+      471.32455532033674,
+      876.5
+    ],
+    "size": [
+      22.0,
+      93.84455532033672,
+      776.5
+    ]
+  },
+  "power_cable_centerline_length_mm": 815.2899081698724,
+  "routing_static_collisions": [],
+  "routing_cover_sweep_collisions": [],
+  "cover_sweep_min_routing_distance_mm": 44.299802482629424,
+  "cover_sweep_min_routing_distance_angle_degrees": 42,
+  "routing_wall_distance_mm": 68.67544467966326,
+  "cable_back_distance_mm": 12.0,
+  "clip_cable_distances_mm": [
+    1.0,
+    1.0,
+    0.9999999999998912
+  ],
   "closed_player_bounds_mm": {
     "min": [
       445.0,
-      25.0,
+      24.9999999,
       780.0
     ],
     "max": [
       895.0,
-      388.7786530812917,
+      388.8,
       990.7
     ],
     "size": [
       450.0,
-      363.7786530812917,
+      363.80000010000003,
       210.70000000000005
     ]
   },
   "open_player_bounds_mm": {
     "min": [
       445.0,
-      25.0,
+      24.9999999,
       780.0
     ],
     "max": [
       895.0,
-      439.3473396612978,
+      439.3473396612977,
       1282.3305788778034
     ],
     "size": [
       450.0,
-      414.3473396612978,
+      414.34733976129775,
       502.3305788778034
     ]
   },
   "cover_sweep_step_degrees": 1,
   "cover_sweep_angles": 71,
   "cover_sweep_min_wall_distance_mm": 100.65266033870228,
-  "cover_sweep_min_cabinet_distance_mm": 107.71507848057058,
+  "cover_sweep_min_cabinet_distance_mm": 107.3648007188739,
+  "cover_sweep_min_cabinet_distance_angle_degrees": 0,
+  "cover_sweep_min_back_distance_mm": 120.00570284149522,
+  "cover_sweep_min_back_distance_angle_degrees": 42,
+  "open_cover_distances_mm": {
+    "BackPanel": 120.00570284149548,
+    "SideRight": 114.70977667964684,
+    "SideLeft": 450.28694503160364
+  },
   "cover_sweep_max_height_mm": 1282.3305788778034,
   "closed_player_cabinet_collisions": [],
   "cover_sweep_collisions": [],
@@ -89,7 +228,9 @@
     "Discrete geometry checks, not continuous motion or physical fit.",
     "Hardware, fasteners, wood joints, load and tip stability unverified.",
     "Record sleeves assume 320\u00d7320\u00d74 mm; quantities are display samples.",
-    "Plug/cable and acoustic clearance require physical confirmation."
+    "Plug/cable and acoustic clearance require physical confirmation.",
+    "Cable/plug/clips are unverified envelopes; slack, wall plug and outlet not modeled.",
+    "Cable route is fixed; cable deformation and actual bend limits are not simulated."
   ],
-  "model_sha256": "2eb6c5f11597ef2d800d9cd37024c3f0d6f6e35e04d00564a40797aa281d50d7"
+  "model_sha256": "7d4d9bd0af57f242431627ec76281da54f3599f52e46b485d89af76963a05ced"
 }
