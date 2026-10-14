@@ -12,6 +12,17 @@
     "saved_back_recess_10": true,
     "saved_adjoining_board_depths": true,
     "saved_parameters_match_file": true,
+    "saved_single_continuous_tabletop": true,
+    "saved_left_record_clearance_350": true,
+    "saved_middle_ends_below_tabletop": true,
+    "saved_old_bin_front_and_rods_removed": true,
+    "saved_front_facing_records_and_extraction_clear": true,
+    "saved_cd_contents_fit_drawer": true,
+    "saved_drawer_face_and_box_heights": true,
+    "saved_decor_placeholders_and_flags": true,
+    "saved_cd_player_size_and_position": true,
+    "saved_vase_height_and_position": true,
+    "saved_decor_clear_of_cabinet_and_player": true,
     "saved_routing_parts_and_placeholder_flags": true,
     "saved_plug_size_position_and_contact": true,
     "saved_cable_diameter_bend_length_and_volume": true,
@@ -40,9 +51,10 @@
     "step_contains_CableClip03": true,
     "closed_height_after_reopen": true,
     "saved_cover_0_70_routing_clearance_matches_report": true,
+    "saved_cover_0_70_decor_clearance_matches_report": true,
     "pose_round_trip": true
   },
-  "model_sha256": "7d4d9bd0af57f242431627ec76281da54f3599f52e46b485d89af76963a05ced",
-  "step_sha256": "57bdfcc8e6d210a1eccd3bb72d23d69f6788f02fccd042fcd2d2d8251e912f4e",
-  "wood_parts_csv_sha256": "956ff11418c84805c9818ddc1c82c818bb3a79e47c1eccae918058685c652c3a"
+  "model_sha256": "e72d9551c52d7ddb1556fa922f011b3e61a6e7673eb15199b52fb550cf35b2e7",
+  "step_sha256": "b35793acc0b9e6d10c4d198ef1e5b396487a868c534e6dd6d41ca21ab6bf460d",
+  "wood_parts_csv_sha256": "c1017bfcc1af826f2626143597c634b4950b07f6a5bdecfaa9e163e70866c745"
 }

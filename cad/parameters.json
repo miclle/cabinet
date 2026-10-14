@@ -17,7 +17,7 @@
   "right_clear_width": 500,
   "tabletop_height": 780,
   "bottom_clearance": 100,
-  "bin_floor_top": 560,
+  "left_shelf_top": 410,
   "right_shelf_top": 510,
   "wall_gap": 80,
   "player_offset": [445, 25.6, 780],
@@ -43,5 +43,14 @@
   "slat_gap": 10,
   "drawer_travel": 300,
   "record_sleeve": [320, 320, 4],
+  "cd_case": [142, 125, 10],
+  "tabletop_decor": {
+    "cd_player_size": [220, 200, 60],
+    "cd_player_position": [175, 60, 780],
+    "vase_diameter": 100,
+    "vase_height": 180,
+    "vase_position": [90, 300, 780],
+    "actual_parts_verified": false
+  },
   "note": "Concept layout only. Hardware, joints, load, sleeve sizes and physical fit require confirmation."
 }
