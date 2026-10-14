@@ -2,19 +2,18 @@
 B01-L,SideLeft,Cabinet,左侧板 · 前R20后R10 · 底高5,柜体左侧板（脚垫支承）,Z/Y/X,825.0,460.0,20.0,1,0.0,-0.0,5.0,CAD envelope; not released for cutting,木料高825、下缘离地5；前名义高810、最高830、后立边顶高820；前R20后R10与斜上沿相切；需轮廓图与接头余量
 B01-R,SideRight,Cabinet,右侧板 · 前R20后R10 · 底高5,柜体右侧板（脚垫支承）,Z/Y/X,825.0,460.0,20.0,1,920.0,-0.0,5.0,CAD envelope; not released for cutting,木料高825、下缘离地5；前名义高810、最高830、后立边顶高820；前R20后R10与斜上沿相切；需轮廓图与接头余量
 B02,Bottom,Cabinet,底板 · 下表面距地 100,底板，下表面高100,X/Y/Z,900.0,450.0,20.0,1,20.0,0.0,100.0,CAD envelope; not released for cutting,后沿Y450与背板外面齐平、距侧板后沿10；入槽和榫长未计
-B03,Middle,Cabinet,中隔板 · 后端抵背板内侧,左右分区中隔板，底高120,Z/Y/X,660.0,430.0,20.0,1,400.0,0.0,120.0,CAD envelope; not released for cutting,深430、后端抵背板内表面Y430；榫槽未计
-B04,PlayerTable,Cabinet,唱片机台面 · 高 780,右上唱片机台面，承托面高780,X/Y/Z,500.0,430.0,20.0,1,420.0,0.0,760.0,CAD envelope; not released for cutting,深430、后沿抵背板内表面；端部连接、孔位未计
-B05,BinFloor,Cabinet,左上唱片槽底板,左上唱片槽底板，上表面高560,X/Y/Z,380.0,430.0,20.0,1,20.0,0.0,540.0,CAD envelope; not released for cutting,板深430；加前挡板后槽内净深410；榫槽未计
-B06,BinFront,Cabinet,唱片槽前挡板 · 高 220,左上唱片槽前挡板，底高560,X/Z/Y,380.0,220.0,20.0,1,20.0,0.0,560.0,CAD envelope; not released for cutting,顶高780；端部连接未计
+B03,Middle,Cabinet,中隔板 · 顶端承托整块台面,左右分区中隔板，底高120、顶高760,Z/Y/X,640.0,430.0,20.0,1,400.0,0.0,120.0,CAD envelope; not released for cutting,高640、深430；顶端抵整块台面下表面Z760；后端抵背板内表面Y430；榫槽未计
+B04,PlayerTable,Cabinet,整块连续台面 · 900×430 · 高780,左右连续整块台面，承托面高780,X/Y/Z,900.0,430.0,20.0,1,20.0,0.0,760.0,CAD envelope; not released for cutting,900×430×20；跨过左右分区，中隔板承托于Z760；后沿抵背板内表面；接头与木材伸缩连接待定
+B05,BinFloor,Cabinet,左上正面取片层板 · 上表面高410 · 格内净高350,左上正面取片层板，上表面高410,X/Y/Z,380.0,430.0,20.0,1,20.0,0.0,390.0,CAD envelope; not released for cutting,380×430×20；下表面Z390，上表面Z410；至台面下表面净高350；无前挡板和分隔杆；榫槽未计
 B07,BackPanel,Cabinet,整幅封闭背板 · 内退10 · 顶高810 · 900×690×20,整幅封闭背板，底高120、顶高810,X/Z/Y,900.0,690.0,20.0,1,20.0,430.0,120.0,CAD envelope; not released for cutting,Y430～450、外表面内退10、低于侧板最高点20；浮动缝和背板接头待定
 B08,RightShelf,Cabinet,右侧层板 · 上格净高 250,右侧层板，上表面高510,X/Y/Z,500.0,390.0,20.0,1,420.0,30.0,490.0,CAD envelope; not released for cutting,前沿Y30、后沿Y420、深390；后方余量10；接头待定
 B09,RecordDivider,Cabinet,下格可拆竖隔板 · 两格净宽 240,右下可拆竖隔板，底高120,Z/Y/X,370.0,390.0,20.0,1,660.0,30.0,120.0,CAD envelope; not released for cutting,深390、后沿Y420、后方余量10；高370为净空紧配；装拆间隙和定位件未加入
-C01,DrawerFront,Drawer,抽屉面板 · 四周 3 mm 初值,左下抽屉外面板,X/Z/Y,374.0,234.0,20.0,1,23.0,0.0,123.0,CAD envelope; not released for cutting,实际374×234；名义面口380×240，四周各3间隙
+C01,DrawerFront,Drawer,抽屉面板 · 名义高270 · 四周3 mm,左下抽屉外面板,X/Z/Y,374.0,264.0,20.0,1,23.0,0.0,123.0,CAD envelope; not released for cutting,实际374×264；名义面口380×270（Z120～390），四周各3间隙
 C02,DrawerFloor,Drawer,抽屉底板 · 10 mm,抽屉底板，上表面高150,X/Y/Z,354.0,384.0,10.0,1,33.0,20.0,140.0,CAD envelope; not released for cutting,当前在四壁下方，未入槽；改入槽需重算
-C03-L,DrawerLeft,Drawer,抽屉左侧 · 12 mm,抽屉左箱侧,Y/Z/X,384.0,190.0,12.0,1,33.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384；滑轨孔和箱角连接未计
-C03-R,DrawerRight,Drawer,抽屉右侧 · 12 mm,抽屉右箱侧,Y/Z/X,384.0,190.0,12.0,1,375.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384；滑轨孔和箱角连接未计
-C04-F,DrawerInnerFront,Drawer,抽屉内前板,抽屉箱内前板,X/Z/Y,330.0,190.0,12.0,1,45.0,20.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间；箱角连接未计
-C04-R,DrawerRear,Drawer,抽屉后板,抽屉后板,X/Z/Y,330.0,190.0,12.0,1,45.0,392.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间；箱角连接未计
+C03-L,DrawerLeft,Drawer,抽屉左侧 · 12 mm,抽屉左箱侧,Y/Z/X,384.0,220.0,12.0,1,33.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384、侧壁高220；滑轨孔和箱角连接未计
+C03-R,DrawerRight,Drawer,抽屉右侧 · 12 mm,抽屉右箱侧,Y/Z/X,384.0,220.0,12.0,1,375.0,20.0,150.0,CAD envelope; not released for cutting,当前箱深384、侧壁高220；滑轨孔和箱角连接未计
+C04-F,DrawerInnerFront,Drawer,抽屉内前板,抽屉箱内前板,X/Z/Y,330.0,220.0,12.0,1,45.0,20.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间，高220；箱角连接未计
+C04-R,DrawerRear,Drawer,抽屉后板,抽屉后板,X/Z/Y,330.0,220.0,12.0,1,45.0,392.0,150.0,CAD envelope; not released for cutting,位于左右箱侧之间，高220；箱角连接未计
 D01-L,DoorLeft,Door,格栅门左边框,格栅门左竖框,Z/X/Y,586.0,24.0,28.0,1,423.0,0.0,147.0,CAD envelope; not released for cutting,586为上下框间净长；两端榫长未计；框宽24不直接适配Ø35杯孔
 D01-R,DoorRight,Door,格栅门右边框,格栅门右竖框,Z/X/Y,586.0,24.0,28.0,1,893.0,0.0,147.0,CAD envelope; not released for cutting,586为上下框间净长；两端榫长未计；框宽24不直接适配Ø35杯孔
 D02-T,DoorTop,Door,格栅门上框,格栅门上横框,X/Z/Y,494.0,24.0,28.0,1,423.0,0.0,733.0,CAD envelope; not released for cutting,当前通长494；角部连接及19个格栅榫眼未计
