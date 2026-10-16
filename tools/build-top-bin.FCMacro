@@ -1,0 +1,13 @@
+"""Regenerate only design A (top record bin) inside FreeCAD GUI."""
+import traceback
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+path = root / 'tools/build_model.py'
+scope = {'__file__': str(path), '__name__': 'cabinet_builder'}
+try:
+    exec(compile(path.read_bytes(), str(path), 'exec'), scope)
+    scope['deliver']('top-bin')
+except Exception:
+    (root / 'designs/top-bin/cad/build-error.log').write_text(traceback.format_exc())
+    raise

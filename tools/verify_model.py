@@ -1,4 +1,5 @@
 """Read back the delivered CAD in a private copy; never save the source model."""
+import argparse
 import csv
 import hashlib
 import importlib.util
@@ -13,11 +14,17 @@ import zipfile
 import FreeCAD as App
 import Part
 
-ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ROOT = PROJECT_ROOT
 
 
-def verify():
+def verify(design='full-top'):
     """Check persisted geometry, GUI visibility, report binding and pose round-trip."""
+    global ROOT
+    if design not in ('full-top', 'top-bin'):
+        raise ValueError('Unknown design; choose full-top or top-bin')
+    top_bin = design == 'top-bin'
+    ROOT = PROJECT_ROOT / 'designs/top-bin' if top_bin else PROJECT_ROOT
     path = ROOT / 'cad/cabinet.FCStd'
     report = json.loads((ROOT / 'cad/validation.json').read_text())
     checks = {
@@ -55,56 +62,69 @@ def verify():
                 for name, (depth, end) in expected_depths.items())
             checks['saved_parameters_match_file'] = json.loads(doc.SceneState.ParametersJSON) == json.loads(
                 (ROOT / 'cad/parameters.json').read_text())
-            table = doc.PlayerTable.Shape.BoundBox
-            shelf = doc.BinFloor.Shape.BoundBox
-            checks['saved_single_continuous_tabletop'] = len(doc.PlayerTable.Shape.Solids) == 1 and all(
-                abs(a-b) < 1e-6 for a,b in zip(
-                    (table.XMin, table.YMin, table.ZMin, table.XLength, table.YLength, table.ZLength),
-                    (20, 0, 760, 900, 430, 20)))
-            checks['saved_left_record_clearance_350'] = abs(table.ZMin-shelf.ZMax-350) < 1e-6
-            checks['saved_middle_ends_below_tabletop'] = abs(doc.Middle.Shape.BoundBox.ZMax-table.ZMin) < 1e-6
-            checks['saved_old_bin_front_and_rods_removed'] = all(doc.getObject(name) is None
-                for name in ('BinFront', 'BinRod0', 'BinRod1'))
-            left_records = [obj for obj in doc.Records.Group if obj.Name.startswith('BinRecord')]
-            fixed = Part.makeCompound([obj.Shape for group in (doc.Cabinet, doc.Door, doc.Drawer)
-                                       for obj in group.Group])
-            retrieval_clear = len(left_records) == 18
-            for record in left_records:
-                bb = record.Shape.BoundBox
-                retrieval_clear &= all(abs(a-b) < 1e-6 for a,b in zip(
-                    (bb.XLength, bb.YLength, bb.ZLength, bb.YMin, bb.ZMin), (4, 320, 320, 35, 410)))
-                envelope = Part.makeBox(bb.XLength, bb.YLength+400, bb.ZLength,
-                                       App.Vector(bb.XMin, bb.YMin-400, bb.ZMin))
-                retrieval_clear &= envelope.common(fixed).Volume < 0.001
-            checks['saved_front_facing_records_and_extraction_clear'] = bool(retrieval_clear)
-            cds = [obj for obj in doc.Records.Group if obj.Name.startswith('DrawerCD')]
-            checks['saved_cd_contents_fit_drawer'] = len(cds) == 12 and all(
-                obj.PoseRole == 'Drawer' and obj.Shape.BoundBox.ZMax <= 370
-                and obj.Shape.BoundBox.ZMin == 150
-                and obj.Shape.common(fixed).Volume < 0.001 for obj in cds)
-            checks['saved_drawer_face_and_box_heights'] = (
-                abs(doc.DrawerFront.Shape.BoundBox.ZLength-264) < 1e-6
-                and abs(doc.DrawerLeft.Shape.BoundBox.ZLength-220) < 1e-6)
-            decor = doc.TabletopDecor.Group
-            decor_shape = Part.makeCompound([obj.Shape for obj in decor])
-            checks['saved_decor_placeholders_and_flags'] = len(decor) == 8 and all(
-                obj.IsDecorPlaceholder and not obj.ActualPartVerified for obj in decor)
-            cd_shape = Part.makeCompound([obj.Shape for obj in decor if obj.Name.startswith('DecorCD')])
-            cd_bb = cd_shape.optimalBoundingBox(False)
-            checks['saved_cd_player_size_and_position'] = all(abs(a-b) < 1e-6 for a,b in zip(
-                (cd_bb.XMin, cd_bb.YMin, cd_bb.ZMin, cd_bb.XLength, cd_bb.YLength, cd_bb.ZLength),
-                (175, 60, 780, 220, 200, 60)))
-            vase_bb = doc.DecorVase.Shape.optimalBoundingBox(False)
-            checks['saved_vase_height_and_position'] = (
-                len(doc.DecorVase.Shape.Solids) == 1
-                and abs(vase_bb.ZMin-780) < 1e-6 and abs(vase_bb.ZLength-180) < 1e-6
-                and abs((vase_bb.XMin+vase_bb.XMax)/2-90) < 1e-6
-                and abs((vase_bb.YMin+vase_bb.YMax)/2-300) < 1e-6
-                and doc.DecorVase.Shape.distToShape(doc.PlayerTable.Shape)[0] < 1e-6)
-            checks['saved_decor_clear_of_cabinet_and_player'] = all(
-                obj.Shape.common(Part.makeCompound([item.Shape for group in (
-                    doc.Cabinet, doc.Door, doc.Drawer, doc.Player, doc.CableRouting)
-                    for item in group.Group])).Volume < 0.001 for obj in decor)
+            decor_shape = None
+            if not top_bin:
+                table = doc.PlayerTable.Shape.BoundBox
+                shelf = doc.BinFloor.Shape.BoundBox
+                checks['saved_single_continuous_tabletop'] = len(doc.PlayerTable.Shape.Solids) == 1 and all(
+                    abs(a-b) < 1e-6 for a,b in zip(
+                        (table.XMin, table.YMin, table.ZMin, table.XLength, table.YLength, table.ZLength),
+                        (20, 0, 760, 900, 430, 20)))
+                checks['saved_left_record_clearance_350'] = abs(table.ZMin-shelf.ZMax-350) < 1e-6
+                checks['saved_middle_ends_below_tabletop'] = abs(doc.Middle.Shape.BoundBox.ZMax-table.ZMin) < 1e-6
+                checks['saved_old_bin_front_and_rods_removed'] = all(doc.getObject(name) is None
+                    for name in ('BinFront', 'BinRod0', 'BinRod1'))
+                left_records = [obj for obj in doc.Records.Group if obj.Name.startswith('BinRecord')]
+                fixed = Part.makeCompound([obj.Shape for group in (doc.Cabinet, doc.Door, doc.Drawer)
+                                           for obj in group.Group])
+                retrieval_clear = len(left_records) == 18
+                for record in left_records:
+                    bb = record.Shape.BoundBox
+                    retrieval_clear &= all(abs(a-b) < 1e-6 for a,b in zip(
+                        (bb.XLength, bb.YLength, bb.ZLength, bb.YMin, bb.ZMin), (4, 320, 320, 35, 410)))
+                    envelope = Part.makeBox(bb.XLength, bb.YLength+400, bb.ZLength,
+                                           App.Vector(bb.XMin, bb.YMin-400, bb.ZMin))
+                    retrieval_clear &= envelope.common(fixed).Volume < 0.001
+                checks['saved_front_facing_records_and_extraction_clear'] = bool(retrieval_clear)
+                cds = [obj for obj in doc.Records.Group if obj.Name.startswith('DrawerCD')]
+                checks['saved_cd_contents_fit_drawer'] = len(cds) == 12 and all(
+                    obj.PoseRole == 'Drawer' and obj.Shape.BoundBox.ZMax <= 370
+                    and obj.Shape.BoundBox.ZMin == 150
+                    and obj.Shape.common(fixed).Volume < 0.001 for obj in cds)
+                checks['saved_drawer_face_and_box_heights'] = (
+                    abs(doc.DrawerFront.Shape.BoundBox.ZLength-264) < 1e-6
+                    and abs(doc.DrawerLeft.Shape.BoundBox.ZLength-220) < 1e-6)
+                decor = doc.TabletopDecor.Group
+                decor_shape = Part.makeCompound([obj.Shape for obj in decor])
+                checks['saved_decor_placeholders_and_flags'] = len(decor) == 8 and all(
+                    obj.IsDecorPlaceholder and not obj.ActualPartVerified for obj in decor)
+                cd_shape = Part.makeCompound([obj.Shape for obj in decor if obj.Name.startswith('DecorCD')])
+                cd_bb = cd_shape.optimalBoundingBox(False)
+                checks['saved_cd_player_size_and_position'] = all(abs(a-b) < 1e-6 for a,b in zip(
+                    (cd_bb.XMin, cd_bb.YMin, cd_bb.ZMin, cd_bb.XLength, cd_bb.YLength, cd_bb.ZLength),
+                    (175, 60, 780, 220, 200, 60)))
+                vase_bb = doc.DecorVase.Shape.optimalBoundingBox(False)
+                checks['saved_vase_height_and_position'] = (
+                    len(doc.DecorVase.Shape.Solids) == 1
+                    and abs(vase_bb.ZMin-780) < 1e-6 and abs(vase_bb.ZLength-180) < 1e-6
+                    and abs((vase_bb.XMin+vase_bb.XMax)/2-90) < 1e-6
+                    and abs((vase_bb.YMin+vase_bb.YMax)/2-300) < 1e-6
+                    and doc.DecorVase.Shape.distToShape(doc.PlayerTable.Shape)[0] < 1e-6)
+                checks['saved_decor_clear_of_cabinet_and_player'] = all(
+                    obj.Shape.common(Part.makeCompound([item.Shape for group in (
+                        doc.Cabinet, doc.Door, doc.Drawer, doc.Player, doc.CableRouting)
+                        for item in group.Group])).Volume < 0.001 for obj in decor)
+            else:
+                checks['saved_original_layout_parts'] = all(doc.getObject(name) is not None
+                    for name in ('BinFront', 'BinRod0', 'BinRod1')) and doc.getObject('TabletopDecor') is None
+                checks['saved_top_bin_floor_and_table_width'] = (
+                    abs(doc.BinFloor.Shape.BoundBox.ZMax-560) < 1e-6
+                    and abs(doc.PlayerTable.Shape.BoundBox.XLength-500) < 1e-6
+                    and abs(doc.Middle.Shape.BoundBox.ZMax-780) < 1e-6)
+                checks['saved_original_drawer_and_records'] = (
+                    abs(doc.DrawerFront.Shape.BoundBox.ZLength-234) < 1e-6
+                    and abs(doc.DrawerLeft.Shape.BoundBox.ZLength-190) < 1e-6
+                    and sum(obj.Name.startswith('DrawerRecord') for obj in doc.Records.Group) == 12)
             cable = json.loads(doc.SceneState.ParametersJSON)['power_cable']
             routing = doc.CableRouting.Group
             routing_names = {obj.Name for obj in routing}
@@ -179,7 +199,7 @@ def verify():
             checks['guides_hidden'] = all(
                 providers[name].find("./Properties/Property[@name='Visibility']/Bool").get('value') == 'false'
                 for name in ('RoomWall', 'RoomFloor'))
-            pose_path = ROOT / 'tools/scene_pose.py'
+            pose_path = PROJECT_ROOT / 'tools/scene_pose.py'
             spec = importlib.util.spec_from_file_location('cabinet_verify_pose', pose_path)
             module = importlib.util.module_from_spec(spec)
             exec(compile(pose_path.read_bytes(), str(pose_path), 'exec'), module.__dict__)
@@ -191,7 +211,9 @@ def verify():
             expected_wood_names = set(expected_depths) | {
                 'SideLeft', 'SideRight', 'BackPanel'} | {
                 obj.Name for group in (doc.Door, doc.Drawer) for obj in group.Group}
-            csv_matches = len(wood_rows) == 38 and wood_names == expected_wood_names
+            if top_bin:
+                expected_wood_names.add('BinFront')
+            csv_matches = len(wood_rows) == (39 if top_bin else 38) and wood_names == expected_wood_names
             for row in wood_rows:
                 bb = doc.getObject(row['cad_object']).Shape.optimalBoundingBox(False)
                 dimensions = [getattr(bb, axis+'Length') for axis in row['dimension_axes'].split('/')]
@@ -223,11 +245,13 @@ def verify():
                 module.set_pose(doc, angle)
                 cover = Part.makeCompound([obj.Shape for obj in moving])
                 min_routing = min(min_routing, cover.distToShape(routing_shape)[0])
-                min_decor = min(min_decor, cover.distToShape(decor_shape)[0])
+                if decor_shape is not None:
+                    min_decor = min(min_decor, cover.distToShape(decor_shape)[0])
             checks['saved_cover_0_70_routing_clearance_matches_report'] = (
                 min_routing > 0 and abs(min_routing-report['cover_sweep_min_routing_distance_mm']) < 1e-6)
-            checks['saved_cover_0_70_decor_clearance_matches_report'] = (
-                min_decor > 0 and abs(min_decor-report['cover_sweep_min_decor_distance_mm']) < 1e-6)
+            if not top_bin:
+                checks['saved_cover_0_70_decor_clearance_matches_report'] = (
+                    min_decor > 0 and abs(min_decor-report['cover_sweep_min_decor_distance_mm']) < 1e-6)
             restored = Part.makeCompound([obj.Shape for obj in doc.Player.Group]).BoundBox
             checks['pose_round_trip'] = all(abs(a-b) < 1e-6 for a,b in zip(
                 (original.XMin, original.YMin, original.ZMin, original.XMax, original.YMax, original.ZMax),
@@ -246,4 +270,6 @@ def verify():
 
 
 if __name__ == '__main__':
-    verify()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--design', choices=('full-top', 'top-bin'), default='full-top')
+    verify(parser.parse_args().design)
