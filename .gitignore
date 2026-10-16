@@ -10,3 +10,5 @@ __pycache__/
 cad/build.done
 cad/build-error.log
 cad/history/
+designs/*/cad/build.done
+designs/*/cad/build-error.log

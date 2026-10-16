@@ -13,16 +13,18 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
-ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ROOT = PROJECT_ROOT
 V = App.Vector
 WOOD = (0.34, 0.21, 0.135)
 LIGHT_WOOD = (0.43, 0.29, 0.19)
+BRASS = (0.70, 0.55, 0.30)
 MOVING_SOURCE = ['DustCover'] + [f'{prefix}{i}' for i in range(2)
     for prefix in ('HingePin', 'HingeSpacer', 'HingeBacking')]
 
 
 def load_pose_module():
-    path = ROOT / 'tools/scene_pose.py'
+    path = PROJECT_ROOT / 'tools/scene_pose.py'
     spec = importlib.util.spec_from_file_location('cabinet_scene_pose', path)
     module = importlib.util.module_from_spec(spec)
     exec(compile(path.read_bytes(), str(path), 'exec'), module.__dict__)
@@ -81,6 +83,7 @@ def side_shape(x, parameters):
 
 
 def build_cabinet(doc, parameters):
+    top_bin = 'bin_floor_top' in parameters
     back_outer_y = parameters['depth']-parameters['back_recess']
     back_inner_y = back_outer_y-parameters['board']
     right_depth = back_inner_y-30-10
@@ -91,6 +94,9 @@ def build_cabinet(doc, parameters):
             ('CableRouting', '07 电源线与理线夹 · 方案占位')]:
         groups[name] = doc.addObject('App::DocumentObjectGroup', name)
         groups[name].Label = label
+    if top_bin:
+        groups['Drawer'].Label = '03 唱片抽屉'
+        groups['Records'].Label = '04 唱片占位 · 320 mm 假设'
 
     def box(name, label, x, y, z, width, depth, height, group='Cabinet', role=None):
         return add_part(doc, groups[group], name, label,
@@ -109,14 +115,23 @@ def build_cabinet(doc, parameters):
                     parameters['foot_pad_height'], V(x, y, 0)), (0.08, 0.08, 0.08))
     box('Bottom', '底板 · 下表面距地 100', 20, 0, 100, 900, back_outer_y, 20)
     table_bottom = parameters['tabletop_height']-parameters['board']
-    shelf_top = parameters['left_shelf_top']
+    shelf_top = parameters['bin_floor_top'] if top_bin else parameters['left_shelf_top']
     shelf_bottom = shelf_top-parameters['board']
-    box('Middle', '中隔板 · 顶端承托整块台面',
-        400, 0, 120, 20, back_inner_y, table_bottom-120)
-    box('PlayerTable', '整块连续台面 · 900×430 · 高780',
-        20, 0, table_bottom, 900, back_inner_y, parameters['board'])
-    box('BinFloor', '左上正面取片层板 · 上表面高410 · 格内净高350',
-        20, 0, shelf_bottom, 380, back_inner_y, parameters['board'])
+    if top_bin:
+        box('Middle', '中隔板 · 后端抵背板内侧', 400, 0, 120, 20, back_inner_y, 660)
+        box('PlayerTable', '唱片机台面 · 高780', 420, 0, table_bottom, 500, back_inner_y, 20)
+        box('BinFloor', '左上唱片槽底板', 20, 0, shelf_bottom, 380, back_inner_y, 20)
+        box('BinFront', '唱片槽前挡板 · 高220', 20, 0, shelf_top, 380, 20, 220)
+        for i, y in enumerate((160, 300)):
+            add_part(doc, groups['Cabinet'], f'BinRod{i}', '铜色唱片分隔杆',
+                Part.makeCylinder(4, 380, V(20, y, 680), V(1, 0, 0)), BRASS)
+    else:
+        box('Middle', '中隔板 · 顶端承托整块台面',
+            400, 0, 120, 20, back_inner_y, table_bottom-120)
+        box('PlayerTable', '整块连续台面 · 900×430 · 高780',
+            20, 0, table_bottom, 900, back_inner_y, parameters['board'])
+        box('BinFloor', '左上正面取片层板 · 上表面高410 · 格内净高350',
+            20, 0, shelf_bottom, 380, back_inner_y, parameters['board'])
     box('BackPanel', '整幅封闭背板 · 内退10 · 顶高810 · 900×690×20',
         20, back_inner_y, 120, 900, 20, parameters['back_top_height']-120)
     box('RightShelf', '右侧层板 · 上格净高 250', 420, 30, 490, 500, right_depth, 20)
@@ -136,28 +151,43 @@ def build_cabinet(doc, parameters):
         add_part(doc, groups['Door'], f'DoorSlat{i+1:02}',
             f'格栅木条 {i+1:02} · 14×24', shape, LIGHT_WOOD, 'Door')
 
+    drawer_wall_height = 190 if top_bin else 220
+    drawer_front_height = 234 if top_bin else shelf_bottom-120-6
+    drawer_front_label = ('抽屉面板 · 四周 3 mm 初值' if top_bin else
+                          '抽屉面板 · 名义高270 · 四周3 mm')
     for name, label, dims in [
-        ('DrawerFront', '抽屉面板 · 名义高270 · 四周3 mm',
-            (23, 0, 123, 374, 20, shelf_bottom-120-6)),
+        ('DrawerFront', drawer_front_label,
+            (23, 0, 123, 374, 20, drawer_front_height)),
         ('DrawerFloor', '抽屉底板 · 10 mm', (33, 20, 140, 354, 384, 10)),
-        ('DrawerLeft', '抽屉左侧 · 12 mm', (33, 20, 150, 12, 384, 220)),
-        ('DrawerRight', '抽屉右侧 · 12 mm', (375, 20, 150, 12, 384, 220)),
-        ('DrawerInnerFront', '抽屉内前板', (45, 20, 150, 330, 12, 220)),
-        ('DrawerRear', '抽屉后板', (45, 392, 150, 330, 12, 220))]:
+        ('DrawerLeft', '抽屉左侧 · 12 mm', (33, 20, 150, 12, 384, drawer_wall_height)),
+        ('DrawerRight', '抽屉右侧 · 12 mm', (375, 20, 150, 12, 384, drawer_wall_height)),
+        ('DrawerInnerFront', '抽屉内前板', (45, 20, 150, 330, 12, drawer_wall_height)),
+        ('DrawerRear', '抽屉后板', (45, 392, 150, 330, 12, drawer_wall_height))]:
         box(name, label, *dims, group='Drawer', role='Drawer')
 
     colors = [(0.15, 0.18, 0.20), (0.48, 0.27, 0.20), (0.57, 0.53, 0.43)]
-    for i in range(18):
-        shape = Part.makeBox(4, 320, 320, V(40+i*20, 35, shelf_top))
-        add_part(doc, groups['Records'], f'BinRecord{i:02}',
-                 '左上唱片占位 · 书脊朝前 · 不代表容量', shape, colors[i % 3])
-    cd_width, cd_height, cd_thickness = parameters['cd_case']
-    for column, x in enumerate((58, 220)):
-        for row in range(6):
-            shape = Part.makeBox(cd_width, cd_thickness, cd_height,
-                                 V(x, 40+row*56, 150))
-            add_part(doc, groups['Records'], f'DrawerCD{column}_{row:02}',
-                     '抽屉 CD 占位 · 不代表容量', shape, colors[row % 3], 'Drawer')
+    if top_bin:
+        positions = [30+group*140+i*20 for group in range(3) for i in range(5)]
+        for i, y in enumerate(positions):
+            shape = Part.makeBox(320, 4, 320, V(50, y, shelf_top))
+            add_part(doc, groups['Records'], f'BinRecord{i:02}',
+                '顶部唱片占位 · 不代表容量', shape, colors[i % 3])
+        for i in range(12):
+            shape = Part.makeBox(320, 4, 320, V(50, 40+i*28, 150))
+            add_part(doc, groups['Records'], f'DrawerRecord{i:02}',
+                '抽屉唱片占位', shape, colors[i % 3], 'Drawer')
+    else:
+        for i in range(18):
+            shape = Part.makeBox(4, 320, 320, V(40+i*20, 35, shelf_top))
+            add_part(doc, groups['Records'], f'BinRecord{i:02}',
+                '左上唱片占位 · 书脊朝前 · 不代表容量', shape, colors[i % 3])
+        cd_width, cd_height, cd_thickness = parameters['cd_case']
+        for column, x in enumerate((58, 220)):
+            for row in range(6):
+                shape = Part.makeBox(cd_width, cd_thickness, cd_height,
+                                     V(x, 40+row*56, 150))
+                add_part(doc, groups['Records'], f'DrawerCD{column}_{row:02}',
+                    '抽屉 CD 占位 · 不代表容量', shape, colors[row % 3], 'Drawer')
     for k, start in enumerate((435, 690)):
         for i in range(16):
             shape = Part.makeBox(4, 320, 320, V(start+i*13, 40, 120))
@@ -332,14 +362,15 @@ def build_tabletop_decor(doc, groups, parameters):
 
 
 def validate(doc, groups, parameters, pose):
+    top_bin = 'bin_floor_top' in parameters
     pose.set_pose(doc, 0)
     parts = [obj for obj in doc.Objects if hasattr(obj, 'Shape')]
     invalid = [obj.Name for obj in parts if obj.Shape.isNull() or not obj.Shape.isValid()]
     cabinet = groups['Cabinet'].Group + groups['Door'].Group + groups['Drawer'].Group
     routing = groups['CableRouting'].Group
     routing_shape = Part.makeCompound([obj.Shape for obj in routing])
-    decor = groups['TabletopDecor'].Group
-    decor_shape = Part.makeCompound([obj.Shape for obj in decor])
+    decor = groups['TabletopDecor'].Group if 'TabletopDecor' in groups else []
+    decor_shape = Part.makeCompound([obj.Shape for obj in decor]) if decor else None
     closed_bounds = bounds(groups['Player'].Group)
     collisions = []
     for player in groups['Player'].Group:
@@ -365,7 +396,7 @@ def validate(doc, groups, parameters, pose):
     cabinet_shape = Part.makeCompound([obj.Shape for obj in cabinet])
     extraction_hits = []
     for record in groups['Records'].Group:
-        if record.Name.startswith('BinRecord'):
+        if not top_bin and record.Name.startswith('BinRecord'):
             bb = record.Shape.BoundBox
             # A swept rectangular sleeve envelope proves a straight front removal path.
             envelope = Part.makeBox(bb.XLength, bb.YLength+400, bb.ZLength,
@@ -420,7 +451,8 @@ def validate(doc, groups, parameters, pose):
         pose.set_pose(doc, angle)
         moving = Part.makeCompound([obj.Shape for obj in cover])
         min_wall = min(min_wall, moving.distToShape(doc.RoomWall.Shape)[0])
-        min_decor = min(min_decor, moving.distToShape(decor_shape)[0])
+        if decor:
+            min_decor = min(min_decor, moving.distToShape(decor_shape)[0])
         cabinet_distance = moving.distToShape(cabinet_shape)[0]
         back_distance = moving.distToShape(doc.BackPanel.Shape)[0]
         routing_distance = moving.distToShape(routing_shape)[0]
@@ -452,15 +484,6 @@ def validate(doc, groups, parameters, pose):
     pad_positions = [bounds([obj]) for obj in pads]
     checks = {
         'valid_solids': not invalid,
-        'tabletop_decor_static_no_penetration': not decor_hits,
-        'tabletop_decor_within_left_surface': all(
-            obj.Shape.BoundBox.XMin >= 20-1e-6 and obj.Shape.BoundBox.XMax <= 400+1e-6
-            and obj.Shape.BoundBox.YMin >= -1e-6 and obj.Shape.BoundBox.YMax <= 430+1e-6
-            and obj.Shape.BoundBox.ZMin >= 780-1e-6 for obj in decor),
-        'tabletop_cd_and_vase_rest_on_surface': all(
-            abs(doc.getObject(name).Shape.distToShape(doc.PlayerTable.Shape)[0]) < 1e-6
-            for name in ('DecorCDBody', 'DecorVase')),
-        'cover_0_70_sampled_clear_of_tabletop_decor': min_decor > 0,
         'cabinet_size_940_460_830': all(abs(a-b) < 1e-6 for a,b in zip(
             bounds(cabinet)['size'], (940, 460, 830))),
         'source_player_65_parts': len(groups['Player'].Group) == 65,
@@ -469,21 +492,6 @@ def validate(doc, groups, parameters, pose):
         'closed_player_cabinet_no_penetration': not collisions,
         'cabinet_parts_no_penetration': not internal_hits,
         'record_placeholders_no_cabinet_penetration': not record_hits,
-        'one_piece_tabletop_900_430_20_at_780': all(abs(a-b) < 1e-6 for a,b in zip(
-            (*bounds([doc.PlayerTable])['min'], *bounds([doc.PlayerTable])['size']),
-            (20, 0, 760, 900, 430, 20))) and len(doc.PlayerTable.Shape.Solids) == 1,
-        'middle_supports_tabletop_underside': abs(
-            doc.Middle.Shape.BoundBox.ZMax-doc.PlayerTable.Shape.BoundBox.ZMin) < 1e-6,
-        'left_front_record_compartment_380_430_350': abs(
-            doc.PlayerTable.Shape.BoundBox.ZMin-doc.BinFloor.Shape.BoundBox.ZMax-350) < 1e-6
-            and abs(doc.BinFloor.Shape.BoundBox.XLength-380) < 1e-6
-            and abs(doc.BinFloor.Shape.BoundBox.YLength-430) < 1e-6,
-        'left_record_front_extraction_envelopes_clear': not extraction_hits,
-        'old_bin_front_and_rods_removed': all(doc.getObject(name) is None
-            for name in ('BinFront', 'BinRod0', 'BinRod1')),
-        'drawer_contents_are_12_cd_cases': len([obj for obj in groups['Records'].Group
-            if obj.Name.startswith('DrawerCD')]) == 12 and not any(
-                obj.Name.startswith('DrawerRecord') for obj in groups['Records'].Group),
         'side_tops_rise_and_round_to_rear': all(
             row[0] < row[1] < row[2] < row[3]
             and abs(row[3]-830) < 1e-6 and abs(row[4]-820) < 1e-6 for row in side_tops),
@@ -521,10 +529,47 @@ def validate(doc, groups, parameters, pose):
         'left_and_right_margin_25': abs(closed_bounds['min'][0]-445) < 0.01
             and abs(920-closed_bounds['max'][0]-25) < 0.01,
     }
+    if not top_bin:
+        checks.update({
+            'tabletop_decor_static_no_penetration': not decor_hits,
+            'tabletop_decor_within_left_surface': all(
+                obj.Shape.BoundBox.XMin >= 20-1e-6 and obj.Shape.BoundBox.XMax <= 400+1e-6
+                and obj.Shape.BoundBox.YMin >= -1e-6 and obj.Shape.BoundBox.YMax <= 430+1e-6
+                and obj.Shape.BoundBox.ZMin >= 780-1e-6 for obj in decor),
+            'tabletop_cd_and_vase_rest_on_surface': all(
+                abs(doc.getObject(name).Shape.distToShape(doc.PlayerTable.Shape)[0]) < 1e-6
+                for name in ('DecorCDBody', 'DecorVase')),
+            'cover_0_70_sampled_clear_of_tabletop_decor': min_decor > 0,
+            'one_piece_tabletop_900_430_20_at_780': all(abs(a-b) < 1e-6 for a,b in zip(
+                (*bounds([doc.PlayerTable])['min'], *bounds([doc.PlayerTable])['size']),
+                (20, 0, 760, 900, 430, 20))) and len(doc.PlayerTable.Shape.Solids) == 1,
+            'middle_supports_tabletop_underside': abs(
+                doc.Middle.Shape.BoundBox.ZMax-doc.PlayerTable.Shape.BoundBox.ZMin) < 1e-6,
+            'left_front_record_compartment_380_430_350': abs(
+                doc.PlayerTable.Shape.BoundBox.ZMin-doc.BinFloor.Shape.BoundBox.ZMax-350) < 1e-6
+                and abs(doc.BinFloor.Shape.BoundBox.XLength-380) < 1e-6
+                and abs(doc.BinFloor.Shape.BoundBox.YLength-430) < 1e-6,
+            'left_record_front_extraction_envelopes_clear': not extraction_hits,
+            'old_bin_front_and_rods_removed': all(doc.getObject(name) is None
+                for name in ('BinFront', 'BinRod0', 'BinRod1')),
+            'drawer_contents_are_12_cd_cases': len([obj for obj in groups['Records'].Group
+                if obj.Name.startswith('DrawerCD')]) == 12 and not any(
+                    obj.Name.startswith('DrawerRecord') for obj in groups['Records'].Group),
+        })
+    else:
+        checks.update({
+            'top_bin_floor_at_560': abs(doc.BinFloor.Shape.BoundBox.ZMax-560) < 1e-6,
+            'top_bin_front_and_two_rods_present': all(doc.getObject(name) is not None
+                for name in ('BinFront', 'BinRod0', 'BinRod1')),
+            'right_only_tabletop_width_500': abs(doc.PlayerTable.Shape.BoundBox.XLength-500) < 1e-6,
+            'top_bin_drawer_retains_records': sum(obj.Name.startswith('DrawerRecord')
+                for obj in groups['Records'].Group) == 12,
+            'top_bin_has_no_tabletop_decor': doc.getObject('TabletopDecor') is None,
+        })
     return {'checks': checks, 'passed': all(checks.values()), 'invalid': invalid,
-        'tabletop_decor_bounds_mm': bounds(decor),
+        'tabletop_decor_bounds_mm': bounds(decor) if decor else None,
         'tabletop_decor_static_collisions': decor_hits,
-        'cover_sweep_min_decor_distance_mm': min_decor,
+        'cover_sweep_min_decor_distance_mm': min_decor if decor else None,
         'source_sha256': doc.SceneState.SourceSHA256,
         'side_top_sample_y_mm': [20, 230, 440, 450, 460], 'side_top_sample_z_mm': side_tops,
         'foot_pad_bounds_mm': pad_positions,
@@ -555,15 +600,17 @@ def validate(doc, groups, parameters, pose):
         'cabinet_part_collisions': internal_hits,
         'record_placeholder_collisions': record_hits,
         'front_record_extraction_collisions': extraction_hits,
-        'left_record_compartment_clear_mm': [380, 430,
+        'left_record_compartment_clear_mm': None if top_bin else [380, 430,
             doc.PlayerTable.Shape.BoundBox.ZMin-doc.BinFloor.Shape.BoundBox.ZMax],
         'door_sweep_collisions': door_hits,
         'drawer_sweep_collisions': drawer_hits,
         'limits': ['Discrete geometry checks, not continuous motion or physical fit.',
             'Hardware, fasteners, wood joints, load and tip stability unverified.',
-            'Record sleeves assume 320×320×4 mm and CD cases 142×125×10 mm; quantities are display samples.',
-            'Front extraction checks sleeve envelopes only; hand clearance and real sleeves unverified.',
-            'CD player and vase are visual placeholders; equipment wiring and actual parts unverified.',
+            ('Record sleeves assume 320×320×4 mm; quantities are display samples.' if top_bin else
+             'Record sleeves assume 320×320×4 mm and CD cases 142×125×10 mm; quantities are display samples.'),
+            *([] if top_bin else [
+                'Front extraction checks sleeve envelopes only; hand clearance and real sleeves unverified.',
+                'CD player and vase are visual placeholders; equipment wiring and actual parts unverified.']),
             'Plug/cable and acoustic clearance require physical confirmation.',
             'Cable/plug/clips are unverified envelopes; slack, wall plug and outlet not modeled.',
             'Cable route is fixed; cable deformation and actual bend limits are not simulated.']}
@@ -587,11 +634,13 @@ def render(doc, groups, pose):
     save('closed.png', iso)
     groups['Player'].Visibility = False
     groups['Records'].Visibility = False
-    groups['TabletopDecor'].Visibility = False
+    if 'TabletopDecor' in groups:
+        groups['TabletopDecor'].Visibility = False
     save('foot-pads.png', App.Rotation(V(3, 1.4, 0), V(0, 0, 1), V(1.4, -3, -1.2), 'ZXY'))
     groups['Player'].Visibility = True
     groups['Records'].Visibility = True
-    groups['TabletopDecor'].Visibility = True
+    if 'TabletopDecor' in groups:
+        groups['TabletopDecor'].Visibility = True
     save('front.png', App.Rotation(V(1, 0, 0), 90))
     save('side-profile.png', App.Rotation(V(0, 1, 0), V(0, 0, 1), V(1, 0, 0), 'ZXY'))
     save('rear.png', App.Rotation(V(-1, 0, 0), V(0, 0, 1), V(0, 1, 0), 'ZXY'))
@@ -627,7 +676,7 @@ def export_wood_parts(doc):
         reader = csv.DictReader(stream)
         fields = reader.fieldnames
         rows = list(reader)
-    rows = [row for row in rows if row['cad_object'] != 'BinFront']
+    rows = [row for row in rows if doc.getObject(row['cad_object']) is not None]
     for row in rows:
         obj = doc.getObject(row['cad_object'])
         bb = obj.Shape.optimalBoundingBox(False)
@@ -643,8 +692,12 @@ def export_wood_parts(doc):
         writer.writerows(rows)
 
 
-def deliver():
+def deliver(design='full-top'):
     """Generate native CAD, closed STEP, previews and a measured fit report."""
+    global ROOT
+    if design not in ('full-top', 'top-bin'):
+        raise ValueError('Unknown design; choose full-top or top-bin')
+    ROOT = PROJECT_ROOT if design == 'full-top' else PROJECT_ROOT / 'designs/top-bin'
     if not App.GuiUp:
         raise RuntimeError('Run build.FCMacro inside FreeCAD GUI for saved colors/visibility')
     output = ROOT / 'cad/cabinet.FCStd'
@@ -658,16 +711,20 @@ def deliver():
         'foot_pad_diameter': 18, 'foot_pad_height': 5, 'foot_pad_end_offset': 25,
         'back_style': 'closed',
         'left_clear_width': 380, 'right_clear_width': 500, 'tabletop_height': 780,
-        'bottom_clearance': 100, 'left_shelf_top': 410, 'right_shelf_top': 510,
+        'bottom_clearance': 100, 'right_shelf_top': 510,
         'door_slats': 19, 'slat_width': 14, 'slat_gap': 10,
-        'record_sleeve': [320, 320, 4], 'cd_case': [142, 125, 10],
+        'record_sleeve': [320, 320, 4],
         'player_offset': [445, 25.6, 780],
         'wall_gap': 80, 'door_hinge': [917, 0, 123], 'open_angle': 70,
         'drawer_travel': 300}
+    baseline.update({'bin_floor_top': 560} if design == 'top-bin' else
+                    {'left_shelf_top': 410, 'cd_case': [142, 125, 10]})
+    if ('bin_floor_top' in parameters) != (design == 'top-bin'):
+        raise ValueError('Selected design and parameter layout do not match')
     if any(parameters[key] != value for key, value in baseline.items()):
         raise ValueError('This first layout is fixed; update build_model.py with dimension changes')
     source = Path(os.environ.get('RECORD_PLAYER_SOURCE',
-        ROOT.parent / 'vinyl-record-player/cad/record-player.FCStd')).resolve()
+        PROJECT_ROOT.parent / 'vinyl-record-player/cad/record-player.FCStd')).resolve()
     if not source.is_file():
         raise FileNotFoundError('Set RECORD_PLAYER_SOURCE to the source record-player.FCStd')
     if hashlib.sha256(source.read_bytes()).hexdigest() != parameters['player_source_sha256']:
@@ -675,8 +732,9 @@ def deliver():
             'RECORD_PLAYER_SOURCE to the pinned source before rebuilding')
     for directory in ('cad', 'previews'):
         (ROOT / directory).mkdir(exist_ok=True)
-    doc = App.newDocument('CabinetAssembly')
-    doc.Label = '黑胶唱片机柜 · 整台面与正面取片 · 940×460×830 · 开盖70°'
+    doc = App.newDocument('CabinetTopBin' if design == 'top-bin' else 'CabinetAssembly')
+    layout_label = 'A 顶部唱片槽' if design == 'top-bin' else 'B 整台面与正面取片'
+    doc.Label = f'黑胶唱片机柜 · {layout_label} · 940×460×830 · 开盖70°'
     state = doc.addObject('App::FeaturePython', 'SceneState')
     state.Label = '方案参数与展示姿态'
     for name, kind in [('ParametersJSON', 'String'), ('SourceSHA256', 'String'),
@@ -688,7 +746,8 @@ def deliver():
     groups = build_cabinet(doc, parameters)
     import_player(doc, groups, source, parameters, state)
     build_cable_routing(doc, groups, parameters)
-    build_tabletop_decor(doc, groups, parameters)
+    if design == 'full-top':
+        build_tabletop_decor(doc, groups, parameters)
     doc.recompute()
     pose = load_pose_module()
     report = validate(doc, groups, parameters, pose)
