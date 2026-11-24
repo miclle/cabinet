@@ -11,17 +11,16 @@ import FreeCADGui as Gui
 import Part
 
 design = Path(__file__).resolve().parent
-root = design.parents[1]
+root = design.parent
 player = runpy.run_path(str(root / "tools/player_assembly.py"))
 pose = player["load_pose_module"]()
 V = App.Vector
 
 
 def fit():
-    output = design / "cad"
     source = Path(os.environ.get("RECORD_PLAYER_SOURCE",
                   root.parent / "vinyl-record-player/cad/record-player.FCStd"))
-    target = output / "audio-rack-with-player.FCStd"
+    target = design / "audio-rack-with-player.FCStd"
     if any(d.FileName and Path(d.FileName).resolve() == target for d in App.listDocuments().values()):
         raise RuntimeError("请先关闭已打开的唱片机与音响柜组合模型。")
     if not source.is_file():
@@ -29,7 +28,7 @@ def fit():
 
     with tempfile.TemporaryDirectory(prefix="audio-rack-fit-") as scratch:
         private = Path(scratch) / "AudioRackWithPlayer.FCStd"
-        shutil.copyfile(output / "audio-rack.FCStd", private)
+        shutil.copyfile(design / "audio-rack.FCStd", private)
         doc = App.openDocument(str(private))
         cabinet = [obj for obj in doc.Objects if obj.TypeId == "Part::Feature"]
         deck = doc.Deck.Shape.BoundBox
@@ -97,7 +96,7 @@ def fit():
                   "min_wall_gap_to_moving_mm": rear + wall_gap - farthest["rear_y_mm"],
                   "peak_rear": farthest, "peak_height": highest, "closest_cabinet": worst,
                   "samples": samples}
-        (output / "player-fit.json").write_text(json.dumps(report, indent=2) + "\n")
+        (design / "player-fit.json").write_text(json.dumps(report, indent=2) + "\n")
     return doc
 
 

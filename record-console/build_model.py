@@ -11,8 +11,8 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
-CONSOLE_DIR = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = CONSOLE_DIR.parents[1]
+CONSOLE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CONSOLE_DIR.parent
 ROOT = CONSOLE_DIR / 'full-top'
 player_tools = runpy.run_path(str(PROJECT_ROOT / 'tools/player_assembly.py'))
 add_part = player_tools['add_part']
@@ -553,7 +553,7 @@ def render(doc, groups, pose):
         view.setCameraOrientation(orientation.Q)
         view.fitAll()
         Gui.updateGui()
-        view.saveImage(str(ROOT / 'previews' / name), 1600, 1400, 'White')
+        view.saveImage(str(ROOT / name), 1600, 1400, 'White')
 
     pose.set_pose(doc, 0)
     save('closed.png', iso)
@@ -578,7 +578,7 @@ def render(doc, groups, pose):
     camera.position.setValue(position.x, position.y, position.z)
     camera.height.setValue(220)
     Gui.updateGui()
-    view.saveImage(str(ROOT / 'previews/cable-routing-detail.png'), 1600, 1400, 'White')
+    view.saveImage(str(ROOT / 'cable-routing-detail.png'), 1600, 1400, 'White')
     pose.set_pose(doc, 70)
     save('open.png', iso)
     save('rear-upper-open.png', rear_upper)
@@ -597,7 +597,7 @@ def render(doc, groups, pose):
 
 def export_wood_parts(doc):
     """Refresh the existing annotated parts list from closed-pose geometry."""
-    path = ROOT / 'cad/wood-parts.csv'
+    path = ROOT / 'wood-parts.csv'
     with path.open(encoding='utf-8-sig', newline='') as stream:
         reader = csv.DictReader(stream)
         fields = reader.fieldnames
@@ -626,11 +626,11 @@ def deliver(design='full-top'):
     ROOT = CONSOLE_DIR / design
     if not App.GuiUp:
         raise RuntimeError('Run build.FCMacro inside FreeCAD GUI for saved colors/visibility')
-    output = ROOT / 'cad/cabinet.FCStd'
+    output = ROOT / 'cabinet.FCStd'
     for opened in App.listDocuments().values():
         if opened.FileName and Path(opened.FileName).resolve() == output.resolve():
             raise RuntimeError('Save manual changes separately and close cabinet.FCStd before rebuilding')
-    parameters = json.loads((ROOT / 'cad/parameters.json').read_text())
+    parameters = json.loads((ROOT / 'parameters.json').read_text())
     baseline = {'width': 940, 'depth': 460, 'height': 830, 'board': 20,
         'side_front_height': 810, 'back_top_height': 810, 'back_recess': 10,
         'side_front_radius': 20, 'side_rear_radius': 10,
@@ -656,8 +656,6 @@ def deliver(design='full-top'):
     if hashlib.sha256(source.read_bytes()).hexdigest() != parameters['player_source_sha256']:
         raise ValueError('Turntable source differs from the checked version; set '
             'RECORD_PLAYER_SOURCE to the pinned source before rebuilding')
-    for directory in ('cad', 'previews'):
-        (ROOT / directory).mkdir(exist_ok=True)
     doc = App.newDocument('CabinetTopBin' if design == 'top-bin' else 'CabinetAssembly')
     layout_label = 'A 顶部唱片槽' if design == 'top-bin' else 'B 整台面与正面取片'
     doc.Label = f'黑胶唱片机柜 · {layout_label} · 940×460×830 · 开盖70°'
@@ -681,19 +679,19 @@ def deliver(design='full-top'):
     export_wood_parts(doc)
     physical = [obj for key in ('Cabinet', 'Door', 'Drawer', 'Player', 'CableRouting')
                 for obj in groups[key].Group]
-    Part.export(physical, str(ROOT / 'cad/cabinet-closed.step'))
+    Part.export(physical, str(ROOT / 'cabinet-closed.step'))
     step_shape = Part.Shape()
-    step_shape.read(str(ROOT / 'cad/cabinet-closed.step'))
+    step_shape.read(str(ROOT / 'cabinet-closed.step'))
     report['checks']['closed_step_valid'] = step_shape.isValid() and bool(step_shape.Solids)
     render(doc, groups, pose)
     doc.recompute()
     doc.saveAs(str(output))
     report['model_sha256'] = hashlib.sha256(output.read_bytes()).hexdigest()
     report['passed'] = all(report['checks'].values())
-    (ROOT / 'cad/validation.json').write_text(json.dumps(report, indent=2)+'\n')
+    (ROOT / 'validation.json').write_text(json.dumps(report, indent=2)+'\n')
     if not report['passed']:
-        raise RuntimeError('Geometry checks failed; see cad/validation.json')
-    (ROOT / 'cad/build.done').write_text('GUI model, previews and geometry checks complete.\n')
-    (ROOT / 'cad/build-error.log').unlink(missing_ok=True)
+        raise RuntimeError('Geometry checks failed; see validation.json')
+    (ROOT / 'build.done').write_text('GUI model, previews and geometry checks complete.\n')
+    (ROOT / 'build-error.log').unlink(missing_ok=True)
     App.Console.PrintMessage('Cabinet assembly saved; all geometry checks passed.\n')
     return doc

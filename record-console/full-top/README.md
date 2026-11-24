@@ -12,24 +12,24 @@
 
 ## 查看模型
 
-- [主模型：cabinet.FCStd](cad/cabinet.FCStd)：在 FreeCAD 中打开，默认唱片机开盖70°，柜门与抽屉关闭。柜体、门、抽屉、唱片占位、唱片机和电源线／理线夹分组保存；新增`TabletopDecor`台面摆放分组，可整体隐藏CD机和花瓶占位。
-- [闭盖 STEP](cad/cabinet-closed.step)：柜体和唱片机的闭合姿态，包含电源插头、线缆及三个理线夹的方案占位；不含唱片、CD机、花瓶占位以及墙面与地面参考。
-- [开闭盖切换宏](../../../tools/toggle-cover.FCMacro)：将主模型设为活动文档，在 FreeCAD 的宏窗口运行；在 0°／70° 间切换，不自动保存。仅查看时可关闭并放弃姿态修改；有手工编辑时先另存副本。
+- [主模型：cabinet.FCStd](cabinet.FCStd)：在 FreeCAD 中打开，默认唱片机开盖70°，柜门与抽屉关闭。柜体、门、抽屉、唱片占位、唱片机和电源线／理线夹分组保存；新增`TabletopDecor`台面摆放分组，可整体隐藏CD机和花瓶占位。
+- [闭盖 STEP](cabinet-closed.step)：柜体和唱片机的闭合姿态，包含电源插头、线缆及三个理线夹的方案占位；不含唱片、CD机、花瓶占位以及墙面与地面参考。
+- [开闭盖切换宏](../../tools/toggle-cover.FCMacro)：将主模型设为活动文档，在 FreeCAD 的宏窗口运行；在 0°／70° 间切换，不自动保存。仅查看时可关闭并放弃姿态修改；有手工编辑时先另存副本。
 - `SceneState` 保存方案参数、唱片机来源文件 SHA-256、盖子转轴和当前展示姿态。墙面参考默认隐藏，位于柜后 80 mm。
 
-模型使用独立实体和保存的姿态基准，尚无完整的草图约束、五金装配或榫卯特征历史。第一版尺寸布局在生成器中明确实现；`cad/parameters.json` 保存方案数值。更改尺寸时需同步修改生成器，参数与固定布局不一致时会拒绝生成，避免产生与参数记录不符的模型。
+模型使用独立实体和保存的姿态基准，尚无完整的草图约束、五金装配或榫卯特征历史。第一版尺寸布局在生成器中明确实现；`parameters.json` 保存方案数值。更改尺寸时需同步修改生成器，参数与固定布局不一致时会拒绝生成，避免产生与参数记录不符的模型。
 
 | 闭盖整体 | 开盖整体 |
 |---|---|
-| ![闭盖整体](previews/closed.png) | ![开盖整体](previews/open.png) |
+| ![闭盖整体](closed.png) | ![开盖整体](open.png) |
 
 | 后侧斜上方 · 闭盖 | 后侧斜上方 · 开盖 70° |
 |---|---|
-| ![后侧斜上方闭盖](previews/rear-upper-closed.png) | ![后侧斜上方开盖](previews/rear-upper-open.png) |
+| ![后侧斜上方闭盖](rear-upper-closed.png) | ![后侧斜上方开盖](rear-upper-open.png) |
 
 这组视图采用相同的后侧斜上方角度，分别适配完整模型范围，便于观察整体比例、侧板最高点与背板的 20 mm 高差、背板后方的 10 mm 内退，以及开盖后与柜体的间距。柜门与抽屉均关闭。
 
-[正视](previews/front.png) · [侧板轮廓](previews/side-profile.png) · [封闭背面与走线](previews/rear.png) · [电源接口、转弯与上部理线夹特写](previews/cable-routing-detail.png) · [四个脚垫底视](previews/foot-pads.png) · [格栅门开启与抽屉拉出](previews/storage-open.png) · [当前内部布局](previews/storage-inspection.png) · [开盖与墙面右视](previews/clearance-right.png)
+[正视](front.png) · [侧板轮廓](side-profile.png) · [封闭背面与走线](rear.png) · [电源接口、转弯与上部理线夹特写](cable-routing-detail.png) · [四个脚垫底视](foot-pads.png) · [格栅门开启与抽屉拉出](storage-open.png) · [当前内部布局](storage-inspection.png) · [开盖与墙面右视](clearance-right.png)
 
 ## 当前布局
 
@@ -60,7 +60,7 @@
 
 若以单碟专辑为主，按单排竖放、每张唱片连封套和外袋平均厚 **4～5 mm**，并为每个独立格预留约 **20 mm** 的取放余量估算：左上净宽380的唱片格约放 **72～90张**；右下两个净宽240的小格合计约放 **88～110张**，整柜合计约 **160～200张**。厚封套、双碟或盒装专辑较多时，容量需按实际厚度重算；空间数量按独立封套份数计算，多碟专辑的实际碟片数需另计。左下抽屉用于CD和配件，不计入黑胶容量。
 
-这些是空间估算，封套厚度和取放余量均为假设，不代表已验证的满载容量或承重。计算公式、不同厚度下的数量及制作前核对项见[容量估算与承载核对](docs/materials-and-hardware.md#唱片容量估算)。
+这些是空间估算，封套厚度和取放余量均为假设，不代表已验证的满载容量或承重。计算公式、不同厚度下的数量及制作前核对项见[容量估算与承载核对](materials-and-hardware.md#唱片容量估算)。
 
 ## 电源线走线方案
 
@@ -76,15 +76,15 @@
 
 当前线缆中心线长约815.29，仅表示从唱机到离地100的走线段，不是整条电源线的采购长度。插头、线径、弯曲半径和理线夹尺寸均为方案占位，未核对实物；夹子的材质、粘贴／固定方式待定。墙插端、余线松弛和束带未建模，也未模拟柔性线材变形。最终应按实物插头、线材允许弯曲半径、移动唱机所需余量和墙插位置调整。
 
-![电源接口与理线夹特写](previews/cable-routing-detail.png)
+![电源接口与理线夹特写](cable-routing-detail.png)
 
 ## 板材与制作
 
-板材尺寸、各块板的位置／厚度／数量，以及制作前需细化的连接与五金，见[板材与制作清单](docs/materials-and-hardware.md)。逐件尺寸见 [wood-parts.csv](cad/wood-parts.csv)：共38件木料，记录当前 CAD 成品包络，尚未计入榫头、槽口、五金加工和备料余量，不能直接作为加工开料表。
+板材尺寸、各块板的位置／厚度／数量，以及制作前需细化的连接与五金，见[板材与制作清单](materials-and-hardware.md)。逐件尺寸见 [wood-parts.csv](wood-parts.csv)：共38件木料，记录当前 CAD 成品包络，尚未计入榫头、槽口、五金加工和备料余量，不能直接作为加工开料表。
 
 ## 空间核对
 
-本轮实际 FreeCAD 几何检查见 [validation.json](cad/validation.json)，保存文件回读见 [readback.json](cad/readback.json)。验证报告通过模型文件 SHA-256 与当前交付绑定。
+本轮实际 FreeCAD 几何检查见 [validation.json](validation.json)，保存文件回读见 [readback.json](readback.json)。验证报告通过模型文件 SHA-256 与当前交付绑定。
 
 - 闭盖时，唱片机总包络为 **450 × 363.8 × 210.7 mm**，最低承托点离地 780，最高点离地 **990.7 mm**。
 - 从 0° 至 70° 每 1° 检查，共 71 个姿态；盖壳、活动合页、补偿垫片和压板一起运动。没有与柜体发生穿透。活动总成与柜体的全程采样最小距离约 **107.36 mm**，与背板的全程采样最小距离约 **120.01 mm**。
@@ -105,13 +105,13 @@
 
 使用 FreeCAD 1.1.1 的图形界面，在宏窗口执行 [build.FCMacro](build.FCMacro)，只生成方案B。方案A使用独立入口[顶部唱片槽生成宏](../top-bin/build.FCMacro)。生成前只需关闭目标方案的模型，手工修改先另存；生成器会拒绝覆盖正在打开的目标文件，两套输出互不覆盖。
 
-默认从柜子仓库的相邻项目 `../vinyl-record-player/cad/record-player.FCStd` 读取唱片机，跨环境可在启动 FreeCAD 前设置 `RECORD_PLAYER_SOURCE` 指向该文件。当前保留唱片机版本 `83f002c`，源文件 SHA-256 固定记录于 `cad/parameters.json`；相邻项目已更新时，生成器会在写入交付物前拒绝不同来源，需从该版本提取文件并用 `RECORD_PLAYER_SOURCE` 指向它。只读取临时副本，导入后会核对原文件哈希。生成器一次交付主模型、闭盖 STEP、12 张视口预览（含走线特写、四个脚垫底视和后侧斜上方的闭盖／开盖视图）和几何报告；默认保存开盖 70°。不支持无 GUI 交付，以保留颜色、透明度与可见性。
+默认从柜子仓库的相邻项目 `../vinyl-record-player/cad/record-player.FCStd` 读取唱片机，跨环境可在启动 FreeCAD 前设置 `RECORD_PLAYER_SOURCE` 指向该文件。当前保留唱片机版本 `83f002c`，源文件 SHA-256 固定记录于 `parameters.json`；相邻项目已更新时，生成器会在写入交付物前拒绝不同来源，需从该版本提取文件并用 `RECORD_PLAYER_SOURCE` 指向它。只读取临时副本，导入后会核对原文件哈希。生成器一次交付主模型、闭盖 STEP、12 张视口预览（含走线特写、四个脚垫底视和后侧斜上方的闭盖／开盖视图）和几何报告；默认保存开盖 70°。不支持无 GUI 交付，以保留颜色、透明度与可见性。
 
-生成器同时从闭合姿态更新`cad/wood-parts.csv`中的板件尺寸和位置，保留清单中的加工待办注释。在仓库根目录运行保存文件回读，使用 FreeCAD 自带 Python；将 `FREECAD_RESOURCES` 设为本机运行环境的 Resources 目录后执行：
+生成器同时从闭合姿态更新`wood-parts.csv`中的板件尺寸和位置，保留清单中的加工待办注释。在仓库根目录运行保存文件回读，使用 FreeCAD 自带 Python；将 `FREECAD_RESOURCES` 设为本机运行环境的 Resources 目录后执行：
 
 ```sh
 PYTHONPATH="${FREECAD_RESOURCES:?请先设置 FreeCAD 运行环境}/lib" \
-  "$FREECAD_RESOURCES/bin/python" designs/record-console/tools/verify_model.py
+  "$FREECAD_RESOURCES/bin/python" record-console/verify_model.py
 ```
 
-回读只打开临时副本，不保存或覆盖主模型；模型重新生成后执行回读，以核对板件清单并刷新`cad/readback.json`。
+回读只打开临时副本，不保存或覆盖主模型；模型重新生成后执行回读，以核对板件清单并刷新`readback.json`。

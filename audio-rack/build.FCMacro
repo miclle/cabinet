@@ -6,7 +6,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
-OUT = Path(__file__).resolve().parent / "cad"
+OUT = Path(__file__).resolve().parent
 V = App.Vector
 WIDTH, DEPTH = 540, 445
 BOARD, BACK = 18, 9
@@ -171,7 +171,6 @@ def build():
     Gui.activeDocument().activeView().setCameraOrientation(
         App.Rotation(V(3, 1.55, 0), V(0, 0, 1), V(1.55, -3, 1.05), "ZXY").Q)
     Gui.activeDocument().activeView().fitAll()
-    OUT.mkdir(exist_ok=True)
     doc.saveAs(str(target))
     Part.export(parts, str(OUT / "audio-rack.step"))
     return doc

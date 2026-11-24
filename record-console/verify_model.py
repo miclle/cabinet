@@ -14,8 +14,8 @@ import zipfile
 import FreeCAD as App
 import Part
 
-CONSOLE_DIR = Path(__file__).resolve().parents[1]
-PROJECT_ROOT = CONSOLE_DIR.parents[1]
+CONSOLE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CONSOLE_DIR.parent
 ROOT = CONSOLE_DIR / 'full-top'
 
 
@@ -26,8 +26,8 @@ def verify(design='full-top'):
         raise ValueError('Unknown design; choose full-top or top-bin')
     top_bin = design == 'top-bin'
     ROOT = CONSOLE_DIR / design
-    path = ROOT / 'cad/cabinet.FCStd'
-    report = json.loads((ROOT / 'cad/validation.json').read_text())
+    path = ROOT / 'cabinet.FCStd'
+    report = json.loads((ROOT / 'validation.json').read_text())
     checks = {
         'validation_passed': report['passed'],
         'validation_matches_model': hashlib.sha256(path.read_bytes()).hexdigest()
@@ -62,7 +62,7 @@ def verify(design='full-top'):
                 and abs(doc.getObject(name).Shape.BoundBox.YMax-end) < 1e-6
                 for name, (depth, end) in expected_depths.items())
             checks['saved_parameters_match_file'] = json.loads(doc.SceneState.ParametersJSON) == json.loads(
-                (ROOT / 'cad/parameters.json').read_text())
+                (ROOT / 'parameters.json').read_text())
             decor_shape = None
             if not top_bin:
                 table = doc.PlayerTable.Shape.BoundBox
@@ -205,7 +205,7 @@ def verify(design='full-top'):
             exec(compile(pose_path.read_bytes(), str(pose_path), 'exec'), module.__dict__)
             original = Part.makeCompound([obj.Shape for obj in doc.Player.Group]).BoundBox
             module.set_pose(doc, 0)
-            with (ROOT / 'cad/wood-parts.csv').open(encoding='utf-8-sig', newline='') as stream:
+            with (ROOT / 'wood-parts.csv').open(encoding='utf-8-sig', newline='') as stream:
                 wood_rows = list(csv.DictReader(stream))
             wood_names = {row['cad_object'] for row in wood_rows}
             expected_wood_names = set(expected_depths) | {
@@ -227,7 +227,7 @@ def verify(design='full-top'):
             physical = [obj for group in (doc.Cabinet, doc.Door, doc.Drawer, doc.Player, doc.CableRouting)
                         for obj in group.Group]
             step = Part.Shape()
-            step.read(str(ROOT / 'cad/cabinet-closed.step'))
+            step.read(str(ROOT / 'cabinet-closed.step'))
             checks['step_includes_all_physical_solids'] = (
                 step.isValid() and len(step.Solids) == sum(len(obj.Shape.Solids) for obj in physical)
                 and abs(step.Volume-sum(obj.Shape.Volume for obj in physical)) < 0.01)
@@ -260,9 +260,9 @@ def verify(design='full-top'):
             App.closeDocument(doc.Name)
     result = {'passed': all(checks.values()), 'checks': checks,
         'model_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
-        'step_sha256': hashlib.sha256((ROOT / 'cad/cabinet-closed.step').read_bytes()).hexdigest(),
-        'wood_parts_csv_sha256': hashlib.sha256((ROOT / 'cad/wood-parts.csv').read_bytes()).hexdigest()}
-    (ROOT / 'cad/readback.json').write_text(json.dumps(result, indent=2)+'\n')
+        'step_sha256': hashlib.sha256((ROOT / 'cabinet-closed.step').read_bytes()).hexdigest(),
+        'wood_parts_csv_sha256': hashlib.sha256((ROOT / 'wood-parts.csv').read_bytes()).hexdigest()}
+    (ROOT / 'readback.json').write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result, indent=2))
     if not result['passed']:
         raise RuntimeError('Saved model read-back failed')

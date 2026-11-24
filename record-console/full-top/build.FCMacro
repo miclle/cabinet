@@ -5,8 +5,8 @@ import traceback
 
 layout = Path(__file__).resolve().parent
 try:
-    builder = runpy.run_path(str(layout.parent / "tools/build_model.py"))
+    builder = runpy.run_path(str(layout.parent / "build_model.py"))
     builder["deliver"](layout.name)
 except Exception:
-    (layout / "cad/build-error.log").write_text(traceback.format_exc())
+    (layout / "build-error.log").write_text(traceback.format_exc())
     raise
