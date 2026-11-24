@@ -12,8 +12,8 @@ import Part
 
 design = Path(__file__).resolve().parent
 root = design.parents[1]
-builder = runpy.run_path(str(root / "tools/build_model.py"))
-pose = builder["load_pose_module"]()
+player = runpy.run_path(str(root / "tools/player_assembly.py"))
+pose = player["load_pose_module"]()
 V = App.Vector
 
 
@@ -43,9 +43,9 @@ def fit():
             state.setEditorMode(prop, 1)
         group = doc.addObject("App::DocumentObjectGroup", "Player")
         group.Label = "唱片机 · 实际装配"
-        parts = builder["import_player"](doc, {"Player": group}, source,
+        parts = player["import_player"](doc, {"Player": group}, source,
                                         {"player_offset": [0, 0, 0]}, state)
-        limits = builder["bounds"](parts)
+        limits = player["bounds"](parts)
         delta = V(deck.Center.x - (limits["min"][0] + limits["max"][0]) / 2,
                   deck.YMin + 20 - limits["min"][1], deck.ZMax - limits["min"][2])
         state.CoverAxis = state.CoverAxis + delta
@@ -59,7 +59,7 @@ def fit():
             if hasattr(part, "ClosedPlacement"):
                 part.ClosedPlacement = placement
         doc.recompute()
-        closed = builder["bounds"](parts)
+        closed = player["bounds"](parts)
         moving = [p for p in parts if getattr(p, "PoseRole", "") == "Cover"]
         cab = Part.makeCompound([o.Shape for o in cabinet])
         contacts = []
@@ -92,7 +92,7 @@ def fit():
         doc.saveAs(str(target))
         report = {"source_sha256": state.SourceSHA256, "player_objects": len(parts),
                   "moving_objects": len(moving), "feet_on_deck": contacts,
-                  "offset_mm": list(delta), "closed": closed, "open": builder["bounds"](parts),
+                  "offset_mm": list(delta), "closed": closed, "open": player["bounds"](parts),
                   "deck_z_mm": deck.ZMax, "cabinet_rear_y_mm": rear, "wall_gap_mm": wall_gap,
                   "min_wall_gap_to_moving_mm": rear + wall_gap - farthest["rear_y_mm"],
                   "peak_rear": farthest, "peak_height": highest, "closest_cabinet": worst,

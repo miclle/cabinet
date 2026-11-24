@@ -1,51 +1,26 @@
 """Build a self-contained cabinet/turntable concept assembly in FreeCAD GUI."""
 import csv
 import hashlib
-import importlib.util
 import json
 import math
 import os
 from pathlib import Path
-import shutil
-import tempfile
+import runpy
 
 import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ROOT = PROJECT_ROOT
+CONSOLE_DIR = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = CONSOLE_DIR.parents[1]
+ROOT = CONSOLE_DIR / 'full-top'
+player_tools = runpy.run_path(str(PROJECT_ROOT / 'tools/player_assembly.py'))
+add_part = player_tools['add_part']
+bounds = player_tools['bounds']
 V = App.Vector
 WOOD = (0.34, 0.21, 0.135)
 LIGHT_WOOD = (0.43, 0.29, 0.19)
 BRASS = (0.70, 0.55, 0.30)
-MOVING_SOURCE = ['DustCover'] + [f'{prefix}{i}' for i in range(2)
-    for prefix in ('HingePin', 'HingeSpacer', 'HingeBacking')]
-
-
-def load_pose_module():
-    path = PROJECT_ROOT / 'tools/scene_pose.py'
-    spec = importlib.util.spec_from_file_location('cabinet_scene_pose', path)
-    module = importlib.util.module_from_spec(spec)
-    exec(compile(path.read_bytes(), str(path), 'exec'), module.__dict__)
-    return module
-
-
-def add_part(doc, group, name, label, shape, color, role=None):
-    if shape.isNull() or not shape.isValid() or not shape.Solids:
-        raise ValueError(f'Invalid solid: {name}')
-    obj = doc.addObject('Part::Feature', name)
-    obj.Label, obj.Shape = label, shape
-    group.addObject(obj)
-    obj.ViewObject.ShapeColor = color
-    obj.ViewObject.LineColor = (0.13, 0.09, 0.07)
-    obj.ViewObject.DisplayMode = 'Flat Lines'
-    obj.ViewObject.LineWidth = 1
-    if role:
-        obj.addProperty('App::PropertyString', 'PoseRole', 'Scene').PoseRole = role
-        obj.addProperty('App::PropertyPlacement', 'ClosedPlacement', 'Scene')
-        obj.ClosedPlacement = obj.Placement
-    return obj
 
 
 def side_shape(x, parameters):
@@ -203,47 +178,6 @@ def build_cabinet(doc, parameters):
     return groups
 
 
-def import_player(doc, groups, source, parameters, state):
-    before = hashlib.sha256(source.read_bytes()).hexdigest()
-    offset = App.Placement(V(*parameters['player_offset']), App.Rotation())
-    # Read a private disk copy so an already-open source/user document is untouched.
-    with tempfile.TemporaryDirectory(prefix='cabinet-player-') as directory:
-        private = Path(directory) / 'player-source.FCStd'
-        shutil.copy2(source, private)
-        src = App.openDocument(str(private))
-        try:
-            saved_parameters = json.loads(src.GeometryDatums.BuildParametersJSON)
-            state.CoverAxis = offset.multVec(src.GeometryDatums.CoverHinge)
-            imported = []
-            for obj in src.Objects:
-                if not hasattr(obj, 'Shape') or obj.Shape.isNull():
-                    continue
-                if getattr(obj, 'IsReference', False) or getattr(obj, 'IsDiagnostic', False):
-                    continue
-                shape = obj.Shape.copy()
-                if obj.Name in MOVING_SOURCE:
-                    shape.Placement = obj.ClosedPlacement
-                shape.Placement = offset.multiply(shape.Placement)
-                target = add_part(doc, groups['Player'], 'RP_'+obj.Name,
-                    obj.Label, shape, tuple(obj.ViewObject.ShapeColor[:3]),
-                    'Cover' if obj.Name in MOVING_SOURCE else None)
-                target.ViewObject.Transparency = obj.ViewObject.Transparency
-                if len(obj.ViewObject.DiffuseColor) == len(shape.Faces):
-                    target.ViewObject.DiffuseColor = obj.ViewObject.DiffuseColor
-                target.addProperty('App::PropertyString', 'SourceObject', 'Source')
-                target.SourceObject = obj.Name
-                imported.append(target)
-            state.addProperty('App::PropertyString', 'PlayerParametersJSON', 'Source')
-            state.PlayerParametersJSON = json.dumps(saved_parameters)
-        finally:
-            App.closeDocument(src.Name)
-    if hashlib.sha256(source.read_bytes()).hexdigest() != before:
-        raise RuntimeError('Source turntable file changed while importing')
-    state.SourceSHA256 = before
-    App.setActiveDocument(doc.Name)
-    return imported
-
-
 def build_cable_routing(doc, groups, parameters):
     """Place a fixed plug envelope, tangent cable sweep and open rear clips."""
     cable = parameters['power_cable']
@@ -308,15 +242,6 @@ def build_cable_routing(doc, groups, parameters):
         shape = base.fuse(bridge).fuse(ring).cut(bore).cut(opening).removeSplitter()
         add(f'CableClip{i:02}', f'背面开口理线夹 {i} · 中心高{clip_z} · 方案占位',
             shape, (0.60, 0.62, 0.64))
-
-
-def bounds(objects):
-    shape = Part.makeCompound([obj.Shape for obj in objects])
-    # GUI tessellation may miss circular extrema; measure the analytic surfaces.
-    bb = shape.optimalBoundingBox(False)
-    return dict(min=[bb.XMin, bb.YMin, bb.ZMin],
-                max=[bb.XMax, bb.YMax, bb.ZMax],
-                size=[bb.XLength, bb.YLength, bb.ZLength])
 
 
 def build_tabletop_decor(doc, groups, parameters):
@@ -436,7 +361,7 @@ def validate(doc, groups, parameters, pose):
         if volume > 0.001:
             drawer_hits.append([travel, volume])
     pose.set_pose(doc, 0)
-    cover = [doc.getObject('RP_'+name) for name in MOVING_SOURCE]
+    cover = [doc.getObject('RP_'+name) for name in player_tools['MOVING_SOURCE']]
     min_wall = float('inf')
     min_cabinet = float('inf')
     min_back = float('inf')
@@ -646,6 +571,7 @@ def render(doc, groups, pose):
     save('rear.png', App.Rotation(V(-1, 0, 0), V(0, 0, 1), V(0, 1, 0), 'ZXY'))
     save('rear-upper-closed.png', rear_upper)
     view.setCameraOrientation(rear_upper.Q)
+    from pivy import coin  # Register Coin node wrappers before requesting the camera.
     camera = view.getCameraNode()
     target = V(515, 430, 850)
     position = target+rear_upper.multVec(V(0, 0, 2000))
@@ -697,7 +623,7 @@ def deliver(design='full-top'):
     global ROOT
     if design not in ('full-top', 'top-bin'):
         raise ValueError('Unknown design; choose full-top or top-bin')
-    ROOT = PROJECT_ROOT if design == 'full-top' else PROJECT_ROOT / 'designs/top-bin'
+    ROOT = CONSOLE_DIR / design
     if not App.GuiUp:
         raise RuntimeError('Run build.FCMacro inside FreeCAD GUI for saved colors/visibility')
     output = ROOT / 'cad/cabinet.FCStd'
@@ -744,12 +670,12 @@ def deliver(design='full-top'):
         state.setEditorMode(name, 1)
     state.ParametersJSON = json.dumps(parameters)
     groups = build_cabinet(doc, parameters)
-    import_player(doc, groups, source, parameters, state)
+    player_tools['import_player'](doc, groups, source, parameters, state)
     build_cable_routing(doc, groups, parameters)
     if design == 'full-top':
         build_tabletop_decor(doc, groups, parameters)
     doc.recompute()
-    pose = load_pose_module()
+    pose = player_tools['load_pose_module']()
     report = validate(doc, groups, parameters, pose)
     pose.set_pose(doc, 0)
     export_wood_parts(doc)

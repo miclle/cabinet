@@ -14,8 +14,9 @@ import zipfile
 import FreeCAD as App
 import Part
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ROOT = PROJECT_ROOT
+CONSOLE_DIR = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = CONSOLE_DIR.parents[1]
+ROOT = CONSOLE_DIR / 'full-top'
 
 
 def verify(design='full-top'):
@@ -24,7 +25,7 @@ def verify(design='full-top'):
     if design not in ('full-top', 'top-bin'):
         raise ValueError('Unknown design; choose full-top or top-bin')
     top_bin = design == 'top-bin'
-    ROOT = PROJECT_ROOT / 'designs/top-bin' if top_bin else PROJECT_ROOT
+    ROOT = CONSOLE_DIR / design
     path = ROOT / 'cad/cabinet.FCStd'
     report = json.loads((ROOT / 'cad/validation.json').read_text())
     checks = {
@@ -175,7 +176,7 @@ def verify(design='full-top'):
                 row[0] < row[1] < row[2] < row[3]
                 and abs(row[3]-830) < 1e-6 and abs(row[4]-820) < 1e-6 for row in side_tops)
             checks['saved_back_top_20_below_side_highest_point'] = all(
-                abs(obj.Shape.BoundBox.ZMax-back.ZMax-20) < 1e-6
+                abs(obj.Shape.optimalBoundingBox(False).ZMax-back.ZMax-20) < 1e-6
                 for obj in (doc.SideLeft, doc.SideRight))
             pads = [obj for obj in doc.Cabinet.Group if obj.Name.startswith('FootPad')]
             expected_pads = {(10, 25), (10, 435), (930, 25), (930, 435)}
@@ -185,9 +186,8 @@ def verify(design='full-top'):
             checks['foot_pad_18x5_on_ground'] = all(
                 abs(obj.Shape.Volume-math.pi*9**2*5) < 1e-6
                 and all(abs(a-b) < 1e-6 for a,b in zip(
-                    (obj.Shape.BoundBox.XLength, obj.Shape.BoundBox.YLength,
-                     obj.Shape.BoundBox.ZLength, obj.Shape.BoundBox.ZMin), (18, 18, 5, 0)))
-                for obj in pads)
+                    (bb.XLength, bb.YLength, bb.ZLength, bb.ZMin), (18, 18, 5, 0)))
+                for obj, bb in ((pad, pad.Shape.optimalBoundingBox(False)) for pad in pads))
             checks['foot_pad_full_top_supports_side'] = all(
                 abs(Part.makeCylinder(9, 1, App.Vector(obj.Shape.CenterOfMass.x,
                     obj.Shape.CenterOfMass.y, 5)).cut(doc.getObject(
