@@ -1,13 +1,14 @@
 # 黑胶唱片机柜
 
-项目并列保留两种设计，方便持续对比和分别修改：
+项目中有三款黑胶唱片机柜设计。
 
 | 方案 | 布局 | 模型与说明 |
 |---|---|---|
 | A · 顶部唱片槽 | 左上开放唱片槽、左下唱片抽屉 | [模型](designs/top-bin/cad/cabinet.FCStd) · [方案说明](designs/top-bin/README.md) |
 | B · 整台面 | 左上正面取片、左下CD／配件抽屉，台面放CD机与花瓶占位 | [模型](cad/cabinet.FCStd) · 本页下方说明 |
+| C · 开放式音响柜 | 上置唱片机、通宽开放展示层、下部四格唱片收纳 | [唱片机组合模型](designs/audio-rack/cad/audio-rack-with-player.FCStd) · [预览与尺寸](designs/audio-rack/README.md) |
 
-[双方案对比](docs/design-comparison.md)提供并排预览、关键尺寸和各自的生成／验证入口。A的文件位于`designs/top-bin/`，B保留在现有`cad/`、`previews/`路径；各自保存参数、板材清单和验证报告，共用工具。**本页下方的布局、容量和预览均描述方案B。**
+[A、B 两款对比](docs/design-comparison.md)提供并排预览、关键尺寸和各自的生成／验证入口。A的文件位于`designs/top-bin/`，B保留在现有`cad/`、`previews/`路径；各自保存参数、板材清单和验证报告，共用工具。**本页下方的布局、容量和预览均描述方案B。**
 
 按[参考图片](references/README.md)建立并调整的 FreeCAD 柜体概念模型，柜体木件外廓为 **940 × 460 × 830 mm**，承托面高 **780 mm**。当前采用**左右连续整块台面、左上正面取放唱片、左下 CD 与配件抽屉**；保留右侧竖格栅门、两侧整板和胡桃木色关系。
 

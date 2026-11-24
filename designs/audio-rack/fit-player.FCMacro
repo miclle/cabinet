@@ -1,0 +1,104 @@
+"""Assemble the actual player on the rack and measure its lid travel in FreeCAD."""
+import json
+import os
+from pathlib import Path
+import runpy
+import shutil
+import tempfile
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+
+design = Path(__file__).resolve().parent
+root = design.parents[1]
+builder = runpy.run_path(str(root / "tools/build_model.py"))
+pose = builder["load_pose_module"]()
+V = App.Vector
+
+
+def fit():
+    output = design / "cad"
+    source = Path(os.environ.get("RECORD_PLAYER_SOURCE",
+                  root.parent / "vinyl-record-player/cad/record-player.FCStd"))
+    target = output / "audio-rack-with-player.FCStd"
+    if any(d.FileName and Path(d.FileName).resolve() == target for d in App.listDocuments().values()):
+        raise RuntimeError("请先关闭已打开的唱片机与音响柜组合模型。")
+    if not source.is_file():
+        raise FileNotFoundError("请用 RECORD_PLAYER_SOURCE 指定唱片机 FCStd 文件。")
+
+    with tempfile.TemporaryDirectory(prefix="audio-rack-fit-") as scratch:
+        private = Path(scratch) / "AudioRackWithPlayer.FCStd"
+        shutil.copyfile(output / "audio-rack.FCStd", private)
+        doc = App.openDocument(str(private))
+        cabinet = [obj for obj in doc.Objects if obj.TypeId == "Part::Feature"]
+        deck = doc.Deck.Shape.BoundBox
+        rear = max(obj.Shape.BoundBox.YMax for obj in cabinet)
+        wall_gap = 80
+        state = doc.addObject("App::FeaturePython", "SceneState")
+        state.Label = "唱片机来源与开盖姿态"
+        for prop, kind in (("SourceSHA256", "String"), ("CoverAxis", "Vector"),
+                           ("CoverAngle", "Angle"), ("ParametersJSON", "String")):
+            state.addProperty("App::Property" + kind, prop, "Scene")
+            state.setEditorMode(prop, 1)
+        group = doc.addObject("App::DocumentObjectGroup", "Player")
+        group.Label = "唱片机 · 实际装配"
+        parts = builder["import_player"](doc, {"Player": group}, source,
+                                        {"player_offset": [0, 0, 0]}, state)
+        limits = builder["bounds"](parts)
+        delta = V(deck.Center.x - (limits["min"][0] + limits["max"][0]) / 2,
+                  deck.YMin + 20 - limits["min"][1], deck.ZMax - limits["min"][2])
+        state.CoverAxis = state.CoverAxis + delta
+        params = {"player_offset": list(delta), "open_angle":
+                  json.loads(state.PlayerParametersJSON)["cover_angle_open"]}
+        state.ParametersJSON = json.dumps(params)
+        for part in parts:
+            placement = part.Placement
+            placement.Base = placement.Base + delta
+            part.Placement = placement
+            if hasattr(part, "ClosedPlacement"):
+                part.ClosedPlacement = placement
+        doc.recompute()
+        closed = builder["bounds"](parts)
+        moving = [p for p in parts if getattr(p, "PoseRole", "") == "Cover"]
+        cab = Part.makeCompound([o.Shape for o in cabinet])
+        contacts = []
+        for p in parts:
+            if p.Shape.BoundBox.ZMin <= deck.ZMax + 0.001:
+                if p.Shape.common(cab).Volume > 0.001:
+                    raise ValueError("闭盖干涉 " + p.Name)
+                if p.Shape.distToShape(doc.Deck.Shape)[0] < 0.001:
+                    contacts.append(p.SourceObject)
+        if set(contacts) != {"Foot0", "Foot1", "Foot2", "Foot3"}:
+            raise ValueError(f"唱片机支承点异常 {contacts}")
+        side = Part.makeCompound([doc.LeftSide.Shape, doc.RightSide.Shape])
+        samples = []
+        for angle in range(int(params["open_angle"]) + 1):
+            pose.set_cover_pose(doc, angle)
+            moving_shape = Part.makeCompound([p.Shape for p in moving])
+            bb = moving_shape.optimalBoundingBox(False)
+            samples.append({"angle_deg": angle, "rear_y_mm": bb.YMax, "top_z_mm": bb.ZMax,
+                            "cabinet_mm": moving_shape.distToShape(cab)[0],
+                            "side_mm": moving_shape.distToShape(side)[0]})
+        worst = min(samples, key=lambda s: s["cabinet_mm"])
+        farthest = max(samples, key=lambda s: s["rear_y_mm"])
+        highest = max(samples, key=lambda s: s["top_z_mm"])
+        if worst["cabinet_mm"] <= 0 or farthest["rear_y_mm"] >= rear + wall_gap:
+            raise ValueError("开盖空间不足，请核对摆位。")
+        doc.Label = "开放式音响柜与唱片机"
+        Gui.activeDocument().activeView().setCameraOrientation(
+            App.Rotation(V(3, 1.55, 0), V(0, 0, 1), V(1.55, -3, 1.05), "ZXY").Q)
+        Gui.activeDocument().activeView().fitAll()
+        doc.saveAs(str(target))
+        report = {"source_sha256": state.SourceSHA256, "player_objects": len(parts),
+                  "moving_objects": len(moving), "feet_on_deck": contacts,
+                  "offset_mm": list(delta), "closed": closed, "open": builder["bounds"](parts),
+                  "deck_z_mm": deck.ZMax, "cabinet_rear_y_mm": rear, "wall_gap_mm": wall_gap,
+                  "min_wall_gap_to_moving_mm": rear + wall_gap - farthest["rear_y_mm"],
+                  "peak_rear": farthest, "peak_height": highest, "closest_cabinet": worst,
+                  "samples": samples}
+        (output / "player-fit.json").write_text(json.dumps(report, indent=2) + "\n")
+    return doc
+
+
+fit()

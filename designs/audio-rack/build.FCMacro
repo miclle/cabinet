@@ -1,0 +1,180 @@
+"""Rebuild the open audio rack in FreeCAD. Dimensions in millimetres."""
+from pathlib import Path
+import math
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+
+OUT = Path(__file__).resolve().parent / "cad"
+V = App.Vector
+WIDTH, DEPTH = 540, 445
+BOARD, BACK = 18, 9
+LEG_HEIGHT, LIP = 135, 26
+LP_CLEAR, UPPER_CLEAR = 365, 348
+STAND_WIDTH = 244
+DISPLAY_ANGLE = 10
+DIVIDER = BOARD
+FRONT, DIVIDER_DEPTH = 2, 420
+SCREW_LENGTH, HEAD_RADIUS, SHANK_RADIUS = 40, 4, 2
+CLEAR_RADIUS, PILOT_RADIUS, PILOT_DEPTH = 2.25, 1.5, 25
+SCREW_ROWS = (FRONT + 45, FRONT + DIVIDER_DEPTH - 45)
+SIDE_RADIUS = 16
+BACK_Y = DEPTH - 12 - BACK
+INNER = WIDTH - 2 * BOARD
+LP_FLOOR = LEG_HEIGHT + BOARD
+LP_CEILING = LP_FLOOR + LP_CLEAR
+UPPER_FLOOR = LP_CEILING + BOARD
+TOP = UPPER_FLOOR + UPPER_CLEAR
+HEIGHT = TOP + BOARD + LIP
+BAY = (INNER - 3 * DIVIDER) / 4
+CENTERS = [BOARD + i * BAY + (i - 0.5) * DIVIDER for i in (1, 2, 3)]
+
+
+def box(x, y, z, w, d, h):
+    return Part.makeBox(w, d, h, V(x, y, z))
+
+
+def side(x):
+    shape = box(x, 0, LEG_HEIGHT, BOARD, DEPTH, HEIGHT - LEG_HEIGHT)
+    edges = [e for e in shape.Edges if e.BoundBox.ZMin == HEIGHT and
+             e.BoundBox.XLength > BOARD - 0.01]
+    return shape.makeFillet(SIDE_RADIUS, edges)
+
+
+def deck():
+    shape = box(BOARD, FRONT, TOP, INNER, DEPTH - 12 - FRONT, BOARD)
+    edges = [e for e in shape.Edges if e.BoundBox.YMax == FRONT and
+             e.BoundBox.XLength > INNER - 0.01]
+    return shape.makeFillet(1.2, edges)
+
+
+def drilled_shelf(z, rear, direction):
+    shape = box(BOARD, FRONT, z, INNER, rear - FRONT, BOARD)
+    face_z = z if direction.z > 0 else z + BOARD
+    for x in CENTERS:
+        for y in SCREW_ROWS:
+            start = V(x, y, face_z)
+            hole = Part.makeCylinder(CLEAR_RADIUS, BOARD, start, direction)
+            seat = Part.makeCone(HEAD_RADIUS, CLEAR_RADIUS, HEAD_RADIUS - CLEAR_RADIUS,
+                                 start, direction)
+            shape = shape.cut(hole.fuse(seat))
+    return shape.removeSplitter()
+
+
+def divider(x):
+    shape = box(x - DIVIDER / 2, FRONT, LP_FLOOR, DIVIDER, DIVIDER_DEPTH, LP_CLEAR)
+    for y in SCREW_ROWS:
+        for z, direction in ((LP_FLOOR, V(0, 0, 1)), (LP_CEILING, V(0, 0, -1))):
+            shape = shape.cut(Part.makeCylinder(PILOT_RADIUS, PILOT_DEPTH, V(x, y, z), direction))
+    return shape
+
+
+def screw(start, direction):
+    # Smooth shank in the clearance hole and a thread-root proxy inside the wood.
+    head_height = HEAD_RADIUS - SHANK_RADIUS
+    head = Part.makeCone(HEAD_RADIUS, SHANK_RADIUS, head_height, start, direction)
+    shank = Part.makeCylinder(SHANK_RADIUS, BOARD - head_height,
+                              start + direction * head_height, direction)
+    core = Part.makeCylinder(1.4, SCREW_LENGTH - BOARD, start + direction * BOARD, direction)
+    return head.fuse(shank).fuse(core).removeSplitter()
+
+
+def stand_profile(points):
+    x = (WIDTH - STAND_WIDTH) / 2
+    vertices = [V(x, y, UPPER_FLOOR + z) for y, z in points]
+    wire = Part.makePolygon(vertices + vertices[:1])
+    return Part.Face(wire).extrude(V(STAND_WIDTH, 0, 0))
+
+
+def check_sleeve_clearance(parts):
+    pivot = V((WIDTH - 320) / 2, 41, UPPER_FLOOR + 12)
+    sleeve = Part.makeBox(320, 4, 320, pivot - V(0, 4, 0))
+    sleeve.rotate(pivot, V(1, 0, 0), -DISPLAY_ANGLE)
+    # Lift the sleeve above the lip, then slide it out of the open bay.
+    for move in (V(0, 0, 10), V(0, -110, 0)):
+        leading = [face.extrude(move) for face in sleeve.Faces
+                   if face.normalAt(0, 0).dot(move) > 1e-8]
+        envelope = Part.makeCompound([sleeve] + leading)
+        for part in parts:
+            if envelope.BoundBox.intersect(part.Shape.BoundBox):
+                if envelope.common(part.Shape).Volume > 0.001:
+                    raise ValueError("套封取放干涉 " + part.Label)
+        sleeve.translate(move)
+
+
+def leg(x, y, dx, dy):
+    # Horizontal end faces seat flat on the floor and the underside of the base.
+    rings = [Part.Wire([Part.makeCircle(r, p)]) for r, p in (
+        (14, V(x + dx, y + dy, 0)), (23, V(x, y, LEG_HEIGHT)))]
+    return Part.makeLoft(rings, True, True)
+
+
+def build():
+    target = OUT / "audio-rack.FCStd"
+    if any(d.FileName and Path(d.FileName).resolve() == target
+           for d in App.listDocuments().values()):
+        raise RuntimeError("请先关闭目标模型，再重新生成。")
+    doc = App.newDocument("AudioRack")
+    doc.Label = "开放式黑胶音响柜"
+    parts = []
+
+    def group(name, label):
+        obj = doc.addObject("App::DocumentObjectGroup", name)
+        obj.Label = label
+        return obj
+
+    def add(parent, name, label, shape, color=(0.46, 0.28, 0.18)):
+        if not shape.isValid() or len(shape.Solids) != 1:
+            raise ValueError(name)
+        obj = doc.addObject("Part::Feature", name)
+        obj.Label, obj.Shape = label, shape
+        obj.ViewObject.ShapeColor = color
+        obj.ViewObject.LineColor = (0.19, 0.12, 0.08)
+        parent.addObject(obj)
+        parts.append(obj)
+
+    body = group("Cabinet", "柜体与层板")
+    add(body, "LeftSide", "左侧板", side(0))
+    add(body, "RightSide", "右侧板", side(WIDTH - BOARD))
+    add(body, "Base", "底板 · 从底面锁螺钉", drilled_shelf(LEG_HEIGHT, DEPTH - 12, V(0, 0, 1)))
+    add(body, "LowerShelf", "展示层底板 · 从上面锁螺钉", drilled_shelf(LP_CEILING, BACK_Y, V(0, 0, -1)))
+    add(body, "Deck", "唱片机台面", deck())
+    add(body, "Back", "整幅背板", box(BOARD, BACK_Y, LP_FLOOR, INNER, BACK, TOP - LP_FLOOR),
+        (0.38, 0.23, 0.15))
+    stand = group("DisplayStand", "可取出的封面展示架")
+    add(stand, "DisplayBase", "底座与前挡唇",
+        stand_profile([(9, 0), (117, 0), (117, 12), (36, 12), (36, 20), (9, 20)]))
+    run = 170 * math.tan(math.radians(DISPLAY_ANGLE))
+    add(stand, "DisplayBack", "展示架斜靠板",
+        stand_profile([(41, 12), (53, 12), (53 + run, 182), (41 + run, 182)]))
+    inserts = group("Dividers", "下层直边竖隔板")
+    hardware = group("DividerScrews", "隔板连接 · 4 × 40 沉头木螺钉")
+    for i, x in enumerate(CENTERS, 1):
+        add(inserts, f"Divider{i}", f"矩形隔板 {i}", divider(x))
+        for row, y in enumerate(SCREW_ROWS, 1):
+            for end, z, direction in (("Bottom", LEG_HEIGHT, V(0, 0, 1)),
+                                      ("Top", UPPER_FLOOR, V(0, 0, -1))):
+                add(hardware, f"Screw{i}{end}{row}", f"隔板 {i} · {end} {row}",
+                    screw(V(x, y, z), direction), (0.48, 0.49, 0.50))
+    feet = group("Feet", "外撇锥形木脚")
+    for i, (x, dx) in enumerate(((59, -24), (WIDTH - 59, 24))):
+        for j, (y, dy) in enumerate(((48, -21), (DEPTH - 48, 21))):
+            add(feet, f"Leg{i}{j}", ("左", "右")[i] + ("前脚", "后脚")[j], leg(x, y, dx, dy))
+    doc.recompute()
+    for i, obj in enumerate(parts):
+        for other in parts[:i]:
+            if obj.Shape.BoundBox.intersect(other.Shape.BoundBox):
+                if obj.Shape.common(other.Shape).Volume > 0.001:
+                    raise ValueError(f"零件干涉 {obj.Label} / {other.Label}")
+    check_sleeve_clearance(parts)
+    Gui.activeDocument().activeView().setCameraOrientation(
+        App.Rotation(V(3, 1.55, 0), V(0, 0, 1), V(1.55, -3, 1.05), "ZXY").Q)
+    Gui.activeDocument().activeView().fitAll()
+    OUT.mkdir(exist_ok=True)
+    doc.saveAs(str(target))
+    Part.export(parts, str(OUT / "audio-rack.step"))
+    return doc
+
+
+build()
